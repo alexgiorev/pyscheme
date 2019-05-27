@@ -111,9 +111,14 @@ def extract_boolean(expr_str):
     if len(expr_str) < 2:
         return None
 
-    first2 = expr_str[2:]
+    first2 = expr_str[:2]
     
-    if first2 
+    if first2 == '#t':
+        return (types.Boolean.from_bool(True), expr_str[2:])
+    elif first2 == '#f':
+        return (types.Boolean.from_bool(False), expr_str[2:])
+    else:
+        return None
 
 
 def tokenize(expr_str):

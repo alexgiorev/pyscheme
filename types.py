@@ -1,4 +1,8 @@
 class Symbol:
+    """
+    Symbols are interned.
+    """
+    
     @staticmethod
     def from_str(astr):
         """Returns the symbol with the same letters as @astr"""
@@ -30,4 +34,11 @@ class String:
         raise NotImplementedError
 
 class Boolean:
-    raise NotImplementedError
+    """There are only 2 boolean objects. Constructors return those
+    objects, they don't create new ones."""
+    
+    @staticmethod
+    def from_bool(abool):
+        """Returns the Scheme boolean with the same truth value as
+        @abool, which must be a python boolean"""
+        raise NotImplementedError
