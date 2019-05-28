@@ -9,23 +9,26 @@ def read(expr_str):
     """transforms the string @expr_str to a scheme data structure"""
     raise NotImplementedError    
 
-# ======================================================================
-# * tokenization.
-# TODO: think about a better way of encapsulating this
+"""
+================================================================================
 
-# ** tokens:
-# a token in this context (contrary to it's normal meaning as a
-# string) is considered to be an instance of one of {types.Number,
-# types.Symbol, types.String, types.Boolean} or a parenthesis string
+* tokenization.
+TODO: think about a better way of encapsulating this
 
-# ** extraction functions:
-# They all take non-empty strings as arguments.  They extract the
-# token from the beginning substring and return the rest of the string
-# (i.e. the unused part). For example, extract_number("123abc") will
-# return (SchemeNumber(123), "abc"). If a token cannot be extracted,
-# None is returned. Be careful when calling extraction functions with
-# strings that begin with whitespace! They will return None in that
-# case.
+** tokens:
+a token in this context (contrary to it's normal meaning as a string)
+is considered to be an instance of one of {types.Number, types.Symbol,
+types.String, types.Boolean} or a parenthesis string
+
+** extraction functions:
+They all take non-empty strings as arguments.  They extract the token
+from the beginning substring and return the rest of the string
+(i.e. the unused part). For example, extract_number("123abc") will
+return (SchemeNumber(123), "abc"). If a token cannot be extracted,
+None is returned. Be careful when calling extraction functions with
+strings that begin with whitespace! They will return None in that
+case.
+"""
 
 extraction_funcs = []
 
@@ -87,6 +90,15 @@ def extract_number(expr_str):
 
 @extraction_func
 def extract_string(expr_str):
+    """
+    syntax of string literals: a sequence of characters enclosed in
+    double quotes, with there being no backlash before the last double
+    quote. The double quotes are part of the literal, but will not be
+    a part of the resulting string object. For example, the literal
+    "abc\"def" denotes the string which has the characters {a, b, c,
+    ", d, e, f}.
+    """
+    
     def ending_dquote_index():
         for i, char in enumerate(expr_str[1:], 1):
             if char == '"' and expr_str[i-1] != '\\':
