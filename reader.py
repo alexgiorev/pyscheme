@@ -1,7 +1,7 @@
 import string
 import re
 
-import types
+import stypes
 
 from fractions import Fraction
 
@@ -17,8 +17,8 @@ TODO: think about a better way of encapsulating this
 
 ** tokens:
 a token in this context (contrary to it's normal meaning as a string)
-is considered to be an instance of one of {types.Number, types.Symbol,
-types.String, types.Boolean} or a parenthesis string
+is considered to be an instance of one of {stypes.Number, stypes.Symbol,
+stypes.String, stypes.Boolean} or a parenthesis string
 
 ** extraction functions:
 They all take non-empty strings as arguments.  They extract the token
@@ -43,25 +43,30 @@ def extract_parenthesis(expr_str):
     first_char = expr_str[0]
     return (first_char, expr_str[1:]) if first_char in "()" else None
 
+# used by extract_symbol and extract_number
+_number_regex = r'(\+|-)?(\d+)(/\d+)?'
 
 @extraction_func
 def extract_symbol(expr_str):
     """
-    A symbol has the same syntax as a python identifier: starts with a
-    letter or '_' and has only alphanumerics afterwards. I know this
-    is not normal scheme symbol syntax, and I may fix this later.
+    A symbol literal a sequence of characters from {<letters> <digits>
+    ! $ % & * / : < = > ? ~ _ ^} that cannot be interpreted as a
+    number.  So 123 is not a symbol literal, even though it is a
+    sequence of the above characters.
     """
-    
-    if expr_str[0] not in string.ascii_letters + '_':
-        return None
-    
-    for i, char in enumerate(expr_str):
-        if not char.isalnum():
-            return (types.Symbol.from_str(expr_str[i]),
-                    expr_str[i:])
+
+    charset = '[-+.!A-Za-z0-9!$%&*/:<=>?~_^]'
+
+    m = re.match(f'{charset}+', expr_str)
+
+    if m:
+        astr = m.group()
+        if re.match(f'{_number_regex}$', astr):
+            return None
+        rest = expr_str[m.end():]
+        return (stypes.Symbol.from_str(astr), rest)
     else:
-        # the whole string is an identifier
-        return (types.Symbol.from_str(expr_str), '')
+        return None
         
     
 @extraction_func
@@ -73,8 +78,7 @@ def extract_number(expr_str):
     <frac> := (+|-)?<digit>+/<digit>+
     """
     
-    number_regex = r'(\+|-)?(\d+)(/\d+)?'
-    m = re.match(number_regex, expr_str)
+    m = re.match(_number_regex, expr_str)
     
     if not m:
         return None
@@ -85,7 +89,7 @@ def extract_number(expr_str):
         # the matched string cannot be converted to an int
         pynum = Fraction(m.group())
 
-    return (types.Number.from_pynum(pynum), expr_str[m.end():])
+    return (stypes.Number.from_pynum(pynum), expr_str[m.end():])
 
 
 @extraction_func
@@ -113,7 +117,7 @@ def extract_string(expr_str):
         return None
     else:
         chars = expr_str[1:edqi]
-        return (types.String.from_str(chars), expr_str[edqi+1:])
+        return (stypes.String.from_str(chars), expr_str[edqi+1:])
 
 
 @extraction_func
@@ -126,9 +130,9 @@ def extract_boolean(expr_str):
     first2 = expr_str[:2]
     
     if first2 == '#t':
-        return (types.Boolean.from_bool(True), expr_str[2:])
+        return (stypes.Boolean.from_bool(True), expr_str[2:])
     elif first2 == '#f':
-        return (types.Boolean.from_bool(False), expr_str[2:])
+        return (stypes.Boolean.from_bool(False), expr_str[2:])
     else:
         return None
 
@@ -142,7 +146,7 @@ def tokenize(expr_str):
     tokens = [] # will return this
     expr_str = expr_str.lstrip()
     while expr_str:
-        for func in token_funcs:
+        for func in extraction_funcs:
             res = func(expr_str)
             if res is not None:
                 token, rest = res
