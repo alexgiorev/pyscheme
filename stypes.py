@@ -1,4 +1,9 @@
-class Symbol:
+class SchemeValue:
+    '''Base class for all scheme types. Useful for checking if an
+    object is a scheme object'''
+    pass
+
+class Symbol(SchemeValue):
     """
     Symbols are interned.
 
@@ -24,10 +29,10 @@ class Symbol:
         return symbol
 
     def __repr__(self):
-        return f"'{self.chars}"
+        return self.chars
         
 
-class Number:
+class Number(SchemeValue):
     """
     Represents a Scheme number. This includes only integers and
     fractions for now.
@@ -50,7 +55,7 @@ class Number:
     def __repr__(self):
         return str(self.pynum)
 
-class String:
+class String(SchemeValue):
     """
     * attributes
     - self.chars: a python string which represents the characters of the string
@@ -92,7 +97,7 @@ class String:
         return f'"{self.chars}"'
 
     
-class Boolean:
+class Boolean(SchemeValue):
     """There are only 2 boolean objects. Constructors return those
     objects, they don't create new ones."""
 
@@ -115,3 +120,44 @@ class Boolean:
 
 Boolean._objects[False] = Boolean.__new__(Boolean)
 Boolean._objects[True] = Boolean.__new__(Boolean)
+
+
+class Cons(SchemeValue):
+    def __init__(self, car, cdr):
+        self.car = car
+        self.cdr = cdr
+
+    @staticmethod
+    def iterable2list(iterable):
+        """Returns a Scheme list with the same values as the python
+        list @pylist"""
+        result = nil
+
+        try:
+            rev = reversed(iterable)
+        except TypeError:
+            # @iterable is not reversible
+            rev = reversed(list(iterable))
+        
+        for value in rev:
+            result = Cons(value, result)
+        return result
+
+    def __str__(self):
+        """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""
+        if type(self.cdr) is Cons:
+            return f'({str(self.car)} {str(self.cdr)[1:-1]})'
+        elif self.cdr is nil:
+            return f'({str(self.car)})'
+        else:
+            return (f'({str(self.car)} . {str(self.cdr)})')
+
+        
+class NilType(SchemeValue):
+    def __bool__(self):
+        return False
+
+    def __str__(self):
+        return "'()"
+    
+nil = NilType()

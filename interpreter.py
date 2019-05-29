@@ -6,7 +6,7 @@ should the interpreter have a global environment as an attribute?
 '''
 
 import compiler
-import reader
+import parser
 
 class Interpreter:
     # attributes: self.frame_stack, self.global_env
@@ -14,5 +14,5 @@ class Interpreter:
     
     def interpret(self, expr_str):
         # evaluate(compile(read(expr_str)), self.global_env)
-        self.evaluate(compiler.compile(reader.read(expr_str)))
+        self.evaluate(compiler.compile(parser.parse(expr_str)))
         

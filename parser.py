@@ -5,9 +5,48 @@ import stypes
 
 from fractions import Fraction
 
-def read(expr_str):
-    """transforms the string @expr_str to a scheme data structure"""
-    raise NotImplementedError    
+
+def parse(expr_str):
+    """Transforms the string @expr_str to a list of scheme data
+    structures.  Raises a ValueError if parsing @expr_str is not
+    possible.  TODO: document in more detail, raise ValueError with
+    meaningful messages """
+
+    def remaining_tokens(tokens_iter):
+        """Assumes an open parenthesis was encountered and this
+        returns a list of the tokens up until the closing
+        parenthesis. The closing paren is not part of the resulting
+        list. Raises ValueError if there is no closing parenthesis"""
+        
+        accum = 1
+        tokens = []
+        for token in tokens_iter:
+            if token == '(':
+                accum += 1
+            elif token == ')':
+                accum -= 1
+                if accum == 0:
+                    return iter(tokens)
+            tokens.append(token)
+        else:
+            # all tokens were exhauseted and no closing parenthesis was found
+            raise ValueError(f'no closing parenthesis: {expr_str}')        
+
+    def parse_tokens(tokens_iter):
+        elements = [] # will return Cons.iterable2list(elements)
+        # + (* 2 3) (/ 1 2))
+        for token in tokens_iter:
+            if token == '(':
+                elements.append(parse_tokens(remaining_tokens(tokens_iter)))
+            elif isinstance(token, stypes.SchemeValue):
+                elements.append(token)
+            else:
+                raise ValueError(f'Invalid token (or valid token at '
+                                 f'the wrong position): {token}')
+
+        return stypes.Cons.iterable2list(elements)
+
+    return parse_tokens(iter(tokenize(expr_str)))
 
 """
 ================================================================================
