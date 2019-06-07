@@ -134,17 +134,17 @@ class ApplicationExpr(Expr):
             if type(operator) is stypes.PrimitiveProcedure:
                 return operator(*operands)
             elif type(operator) is stypes.CompoundProcedure:
-                params, body, parent_env = operator.parts()
+                params, step, env = operator.parts()
                 
                 if len(params) != len(operands):
                     raise SchemeArityError(f'expected {len(params)} arguments, but got {len(operands)}')
                 
-                new_env = Environment(params, operands, parent_env)
+                new_env = Environment(params, operands, env)
                 
                 if not bundle.step_stack: # tail call optimization
                     bundle.frame_stack.pop()
                     
-                frame_stack.append(Frame(body, new_env))
+                frame_stack.append(Frame(step, new_env))
             else:
                 raise SchemeTypeError(f'{operator} is not applicable')
 

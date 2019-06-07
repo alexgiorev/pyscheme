@@ -178,6 +178,10 @@ class CompoundProcedure(SchemeValue):
         self.step = step
         self.env = env
 
+    @property
+    def parts(self):
+        return (self.params, self.step, self.env)
+    
         
 class PrimitiveProcedure:
     def __init__(self, proc):
