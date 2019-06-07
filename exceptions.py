@@ -5,3 +5,7 @@ class SchemeException(Exception):
 
 class SchemeArityError(SchemeException):
     pass
+
+
+class SchemeTypeError(SchemeException):
+    pass

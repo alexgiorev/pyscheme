@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 class SchemeValue:
     '''Base class for all scheme types. Useful for checking if an
     object is a scheme object'''
@@ -34,24 +36,33 @@ class Symbol(SchemeValue):
 
 class Number(SchemeValue):
     """
-    Represents a Scheme number. This includes only integers and
-    fractions for now.
+    Represents a Scheme number.
 
     * attributes
-    - self._pynum: either an int or a Fraction.
+    - self.pynum: a python number
     """
-    
-    @staticmethod
-    def from_pynum(pynum):
-        """
-        @pynum must be an int or a Fraction (what if it
-        isn't?). Returns the scheme number having the same value as
-        pynum.
-        """
-        result = Number.__new__(Number)
-        result.pynum = pynum
-        return result
 
+    def __init__(self, pynum):
+        self.pynum = pynum
+    
+    def __add__(self, other):
+        return Number(self.pynum + other.pynum)
+
+    def __sub__(self, other):
+        return Number(self.pynum - other.pynum)
+    
+    def __mul__(self, other):
+        return Number(self.pynum + other.pynum)
+
+    def __div__(self, other):
+        p1, p2 = self.pynum, other.pynum
+        if type(p1) is type(p2) is int:
+            return Fraction(p1, p2)        
+        return Number(self.pynum / other.pynum)
+
+    def __neg__(self):
+        return Number(-self.pynum)
+    
     def __repr__(self):
         return str(self.pynum)
 

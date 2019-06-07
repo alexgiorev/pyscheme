@@ -3,12 +3,23 @@ class Environment:
         """
         @variables must be an iterable of variables
         @values must be an iterable. (most commonly scheme objects)
-        @parent_environment must be an Environment or None
+        @parent must be an Environment or None
         """
         
         self.namespace = dict(zip(variables, values))
         self.parent = parent
-    
+
+    @staticmethod
+    def from_dict(dct, parent):
+        """
+        @dct must be a dict mapping symbols to scheme values.
+        @parent must be an Environment or None.
+        """
+        result = Environment.__new__(Environment)
+        result.namespace = dct.copy()
+        result.parent = parent
+        return result
+        
     def lookup(self, var):
         """returns the value corresponding to @var in @self if @var is not bound in @self,
         raises a LookupError"""

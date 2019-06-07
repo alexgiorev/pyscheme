@@ -149,7 +149,7 @@ class ApplicationExpr(Expr):
         self.main_step = self._create_main_step(exprs)
 
     @staticmethod
-    def _create_main_step(exprs):
+    def _create_main_step(exprs):        
         def values_handler(bundle):
             values = bundle.last_value # the list of sub-expressions' values
             operator = values[0]
@@ -171,10 +171,11 @@ class ApplicationExpr(Expr):
                 frame_stack.append(Frame(step, new_env))
             else:
                 raise SchemeTypeError(f'{operator} is not applicable')
-
+        
+        steps = [expr.main_step for expr in exprs]    
         def main_step(bundle):
             bundle.step_stack.append(values_handler)
-            bundle.step_stack.append(Sequencer(iter(exprs)))
+            bundle.step_stack.append(Sequencer(iter(steps)))
 
         return main_step
 
@@ -186,9 +187,9 @@ class Sequencer:
     """The result of a Sequencer is a list of the values of it's expressions in the same
     order."""
     
-    def __init__(self, exprs):
+    def __init__(self, steps):
         """@steps must be a non-empty iterator of steps."""
-        self.steps = [expr.main_step for expr in exprs]
+        self.steps = steps
         self.result = []
 
         
@@ -197,6 +198,7 @@ class Sequencer:
         next_step = next(self.steps, None)
         
         if next_step is None:
+            print(f'returning {self.result}')
             return self.result
 
         bundle.step_stack.append(self.value_handler)

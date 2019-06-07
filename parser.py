@@ -128,7 +128,7 @@ def extract_number(expr_str):
         # the matched string cannot be converted to an int
         pynum = Fraction(m.group())
 
-    return (stypes.Number.from_pynum(pynum), expr_str[m.end():])
+    return (stypes.Number(pynum), expr_str[m.end():])
 
 
 @extraction_func
