@@ -129,10 +129,10 @@ class Cons(SchemeValue):
         self.car = car
         self.cdr = cdr
 
+        
     @staticmethod
     def iterable2list(iterable):
-        """Returns a Scheme list with the same values as the python
-        list @pylist"""
+        """Returns a Scheme list with the same values as the python list @pylist"""
         result = nil
 
         try:
@@ -145,6 +145,27 @@ class Cons(SchemeValue):
             result = Cons(value, result)
         return result
 
+    
+    @property
+    def pylist(self):
+        """Returns the python list having the same values as @self. If
+        @self does not encode a list, a ValueError is raised."""
+        return list(self)
+
+    
+    def __iter__(self):
+        """@self must encode a scheme list for this function to work
+        properly. Otherwise, the first time you enter a cdr which is
+        not a Cons, a ValueError will be raised."""
+
+        pair = self
+        while pair is not nil:
+            yield pair.car
+            pair = pair.cdr
+            if type(pair) is not Cons:
+                raise ValueError(f'{self} is not a scheme list')
+        
+    
     def __str__(self):
         """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""
         if type(self.cdr) is Cons:

@@ -16,10 +16,12 @@ class SelfEvaluatingExpr(Expr):
         self.value = value
         self.main_step = lambda bundle: value
 
+        
 class VariableExpr(Expr):
     def __init__(self, var):
         self.var = var
         self.main_step = lambda bundle: bundle.env.lookup(self.var)
+
         
 class AssignmentExpr(Expr):
     def __init__(self, var, subexpr):
@@ -63,7 +65,7 @@ class DefinitionExpr(Expr):
 
     
 class IfExpr(Expr):
-    def __init__(self, predicate, consequent, alternative=None):
+    def __init__(self, predicate, consequent, alternative):
         self.predicate = predicate
         self.consequent = consequent
         self.alternative = alternative
@@ -119,7 +121,7 @@ class BeginExpr(Expr):
     
 
 class ApplicationExpr(Expr):
-    def __init__(self, *exprs):
+    def __init__(self, exprs):
         # @exprs must be a non-empty sequence of expressions
         self.exprs = exprs
         self.main_step = self._create_main_step(exprs)
