@@ -14,9 +14,10 @@ def parse(expr_str):
 
     def remaining_tokens(tokens_iter):
         """Assumes an open parenthesis was encountered and this
-        returns a list of the tokens up until the closing
-        parenthesis. The closing paren is not part of the resulting
-        list. Raises ValueError if there is no closing parenthesis"""
+        returns an iterator of the tokens up to the closing
+        parenthesis. The closing parenthesis is not part of the
+        resulting list. Raises ValueError if there is no closing
+        parenthesis"""
         
         accum = 1
         tokens = []
@@ -34,7 +35,6 @@ def parse(expr_str):
 
     def parse_tokens(tokens_iter):
         elements = [] # will return Cons.iterable2list(elements)
-        # + (* 2 3) (/ 1 2))
         for token in tokens_iter:
             if token == '(':
                 elements.append(parse_tokens(remaining_tokens(tokens_iter)))

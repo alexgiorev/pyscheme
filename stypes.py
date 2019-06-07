@@ -118,8 +118,10 @@ class Boolean(SchemeValue):
     def __repr__(self):
         return '#f' if self is Boolean._objects[False] else '#t'
 
-Boolean._objects[False] = Boolean.__new__(Boolean)
-Boolean._objects[True] = Boolean.__new__(Boolean)
+true = Boolean.__new__(Boolean)
+false = Boolean.__new__(Boolean)
+Boolean._objects[True] = true
+Boolean._objects[False] = false
 
 
 class Cons(SchemeValue):
@@ -161,3 +163,26 @@ class NilType(SchemeValue):
         return "'()"
     
 nil = NilType()
+
+
+class UnspecifiedType(SchemeValue):
+    def __str__(self):
+        return '#!unspecific'
+
+unspecified = UnspecifiedType()
+
+
+class CompoundProcedure(SchemeValue):
+    def __init__(self, params, step, env):
+        self.params = params
+        self.step = step
+        self.env = env
+
+        
+class PrimitiveProcedure:
+    def __init__(self, proc):
+        self.proc = proc
+    
+    def __call__(self, *operands):
+        self.proc(*operands)
+    
