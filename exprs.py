@@ -37,7 +37,6 @@ class AssignmentExpr(Expr):
 
     @staticmethod
     def _create_main_step(var, subexpr):
-        var = self.var
         subexpr_main_step = subexpr.main_step
         
         def value_handler(bundle):
@@ -60,13 +59,12 @@ class DefinitionExpr(Expr):
 
     @staticmethod
     def _create_main_step(var, subexpr):
-        var = self.var
         subexpr_main_step = subexpr.main_step
         
         def value_handler(bundle):
             bundle.env.define_variable(var, bundle.last_value)
             
-        def main_step(bundle)
+        def main_step(bundle):
             bundle.step_stack.append(value_handler)
             bundle.step_stack.append(subexpr_main_step)
             
@@ -123,7 +121,7 @@ class LambdaExpr(Expr):
                 stypes.CompoundProcedure(params, compiled_body, bundle.env))
 
     def __str__(self):
-        params_str = f'({' '.join(str(param) for param in self.params)})'
+        params_str = f"({' '.join(str(param) for param in self.params)})"
         body_str = ' '.join(str(expr) for expr in self.body)
         return f'(lambda {params_str} {body_str})'
 
@@ -141,8 +139,8 @@ class BeginExpr(Expr):
                 bundle.step_stack.extend(steps_reversed))
 
     def __str__(self):
-        body_str = ' '.join(str(expr) for expr in self.body)
-        return f'(begin {body_str})'
+        exprs_str = ' '.join(str(expr) for expr in self.exprs)
+        return f'(begin {exprs_str})'
 
 class ApplicationExpr(Expr):
     def __init__(self, exprs):
@@ -181,7 +179,7 @@ class ApplicationExpr(Expr):
         return main_step
 
     def __str__(self):
-        return f'({' '.join(str(expr) for expr in self.exprs)})'
+        return f"({' '.join(str(expr) for expr in self.exprs)})"
 
 
 class Sequencer:

@@ -159,12 +159,13 @@ class Cons(SchemeValue):
         not a Cons, a ValueError will be raised."""
 
         pair = self
-        while pair is not nil:
+        while True:
             yield pair.car
             pair = pair.cdr
+            if pair is nil:
+                return
             if type(pair) is not Cons:
-                raise ValueError(f'{self} is not a scheme list')
-        
+                raise ValueError(f'{self} is not a scheme list')                    
     
     def __str__(self):
         """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""

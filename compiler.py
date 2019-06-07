@@ -25,7 +25,7 @@ def assignments(slist):
             raise ValueError(f'{slist} is not a valid assignment expression')
         
         cdr = slist.cdr
-        if type cdr is not stypes.Cons:
+        if type(cdr) is not stypes.Cons:
             raiseit()
 
         var = cdr.car
@@ -54,7 +54,7 @@ def definition(slist):
             raise ValueError(f'{slist} is not a valid assignment expression')
         
         cdr = slist.cdr
-        if type cdr is not stypes.Cons:
+        if type(cdr) is not stypes.Cons:
             raiseit()
 
         var = cdr.car
@@ -69,8 +69,8 @@ def definition(slist):
         return var, subexpr
 
     var, subexpr = validate()
-    subexpr = exprs.DefinitionExpr(var, subexpr)
-    return subexpr
+    subexpr = compile(subexpr)
+    return exprs.DefinitionExpr(var, subexpr)
 
 
 @handler('if')
@@ -98,7 +98,7 @@ def lambdaexpr(slist):
             raiseit()
 
     body = slist.cdr.cdr
-    if type(body) is not Cons:
+    if type(body) is not stypes.Cons:
         raiseit()
 
     body = [compile(subexpr) for subexpr in body]
@@ -107,7 +107,7 @@ def lambdaexpr(slist):
 
 @handler('begin')
 def beginexpr(slist):
-    return BeginExpr([compile(subexpr) for subexpr in slist.cdr])
+    return exprs.BeginExpr([compile(subexpr) for subexpr in slist.cdr])
 
 
 def compile(sds):
@@ -123,9 +123,10 @@ def compile(sds):
 
     first = sds.car
     if type(first) is stypes.Symbol:
-        handler = handlers[first]
-        return handler(sds)
-    else:
-        # @sds encodes an application expression.
-        subexprs = [compile(element) for element in sds.pylist]
-        return exprs.ApplicationExpr(subexprs)
+        handler = handlers.get(first)
+        if handler is not None:
+            return handler(sds)
+
+    # @sds encodes an application expression.
+    subexprs = [compile(element) for element in sds.pylist]
+    return exprs.ApplicationExpr(subexprs)
