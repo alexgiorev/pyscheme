@@ -16,11 +16,17 @@ class SelfEvaluatingExpr(Expr):
         self.value = value
         self.main_step = lambda bundle: value
 
+    def __str__(self):
+        return str(self.value)
+
         
 class VariableExpr(Expr):
     def __init__(self, var):
         self.var = var
         self.main_step = lambda bundle: bundle.env.lookup(self.var)
+
+    def __str__(self):
+        return str(self.var)
 
         
 class AssignmentExpr(Expr):
@@ -42,6 +48,9 @@ class AssignmentExpr(Expr):
             bundle.step_stack.append(subexpr_main_step)
             
         return main_step
+
+    def __str__(self):
+        return f'(set! {self.var} {self.subexpr})'
         
 class DefinitionExpr(Expr):
     def __init__(self, var, subexpr):
@@ -63,6 +72,8 @@ class DefinitionExpr(Expr):
             
         return main_step
 
+    def __str__(self):
+        return f'(define {self.var} {self.subexpr})'
     
 class IfExpr(Expr):
     def __init__(self, predicate, consequent, alternative):
@@ -91,6 +102,11 @@ class IfExpr(Expr):
 
         return main_step
 
+    def __str__(self):
+        return (f'(if {self.predicate} {self.consequent})'
+                if self.alternative is None
+                else f'(if {self.predicate} {self.consequent} {self.alternative})')
+
     
 class LambdaExpr(Expr):
     def __init__(self, params, body):
@@ -106,6 +122,11 @@ class LambdaExpr(Expr):
         return (lambda bundle:
                 stypes.CompoundProcedure(params, compiled_body, bundle.env))
 
+    def __str__(self):
+        params_str = f'({' '.join(str(param) for param in self.params)})'
+        body_str = ' '.join(str(expr) for expr in self.body)
+        return f'(lambda {params_str} {body_str})'
+
     
 class BeginExpr(Expr):
     def __init__(self, exprs):
@@ -118,7 +139,10 @@ class BeginExpr(Expr):
         steps_reversed = [expr.main_step for expr in reversed(exprs)]
         return (lambda bundle:
                 bundle.step_stack.extend(steps_reversed))
-    
+
+    def __str__(self):
+        body_str = ' '.join(str(expr) for expr in self.body)
+        return f'(begin {body_str})'
 
 class ApplicationExpr(Expr):
     def __init__(self, exprs):
@@ -155,6 +179,9 @@ class ApplicationExpr(Expr):
             bundle.step_stack.append(Sequencer(iter(exprs)))
 
         return main_step
+
+    def __str__(self):
+        return f'({' '.join(str(expr) for expr in self.exprs)})'
 
 
 class Sequencer:
