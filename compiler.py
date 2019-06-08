@@ -15,6 +15,12 @@ def handler(symname):
     return decorator
 
 
+@handler('quote')
+def quoteexpr(slist):
+    cadr = slist.cdr.car
+    return exprs.QuoteExpr(cadr)
+
+
 @handler('set!')
 def assignments(slist):
     def validate():

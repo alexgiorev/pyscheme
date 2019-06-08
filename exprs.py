@@ -20,6 +20,13 @@ class SelfEvaluatingExpr(Expr):
     def __str__(self):
         return str(self.value)
 
+class QuoteExpr(Expr):
+    def __init__(self, slist):
+        self.slist = slist
+        self.main_step = lambda bundle: slist
+
+    def __str__(self):
+        return f'(quote {self.slist})'
         
 class VariableExpr(Expr):
     def __init__(self, var):
@@ -51,7 +58,7 @@ class AssignmentExpr(Expr):
 
     def __str__(self):
         return f'(set! {self.var} {self.subexpr})'
-        
+    
 class DefinitionExpr(Expr):
     def __init__(self, var, subexpr):
         self.var = var

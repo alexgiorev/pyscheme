@@ -44,3 +44,6 @@ class Interpreter:
             if not frame_stack[-1].step_stack:
                 frame_stack.pop()
         return last_value
+
+i = Interpreter(global_env.make())
+
