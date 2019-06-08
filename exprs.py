@@ -2,6 +2,7 @@ import stypes
 
 from frame import Frame
 from exceptions import *
+from environment import Environment
 
 class Expr:
     """Base class for all expressions.
@@ -87,16 +88,16 @@ class IfExpr(Expr):
         alternative_step = None if alternative is None else alternative.main_step
         
         def pred_value_handler(bundle):
-            if pred_value is stypes.false:
+            if bundle.last_value is stypes.false:
                 if alternative is None:
                     return stypes.unspecified
-                substack.append(alternative_step)
+                bundle.step_stack.append(alternative_step)
             else:
-                substack.append(consequent_step)
+                bundle.step_stack.append(consequent_step)
 
-        def main_step(last_value, substack, env, frame_stack):
-            substack.append(pred_value_handler)
-            substack.append(predicate_step)
+        def main_step(bundle):
+            bundle.step_stack.append(pred_value_handler)
+            bundle.step_stack.append(predicate_step)
 
         return main_step
 
@@ -158,7 +159,7 @@ class ApplicationExpr(Expr):
             if type(operator) is stypes.PrimitiveProcedure:
                 return operator(*operands)
             elif type(operator) is stypes.CompoundProcedure:
-                params, step, env = operator.parts()
+                params, step, env = operator.parts
                 
                 if len(params) != len(operands):
                     raise SchemeArityError(f'expected {len(params)} arguments, but got {len(operands)}')
@@ -168,11 +169,11 @@ class ApplicationExpr(Expr):
                 if not bundle.step_stack: # tail call optimization
                     bundle.frame_stack.pop()
                     
-                frame_stack.append(Frame(step, new_env))
+                bundle.frame_stack.append(Frame(step, new_env))
             else:
                 raise SchemeTypeError(f'{operator} is not applicable')
         
-        steps = [expr.main_step for expr in exprs]    
+        steps = [expr.main_step for expr in exprs]
         def main_step(bundle):
             bundle.step_stack.append(values_handler)
             bundle.step_stack.append(Sequencer(iter(steps)))
@@ -198,7 +199,6 @@ class Sequencer:
         next_step = next(self.steps, None)
         
         if next_step is None:
-            print(f'returning {self.result}')
             return self.result
 
         bundle.step_stack.append(self.value_handler)

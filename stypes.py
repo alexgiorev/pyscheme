@@ -1,3 +1,5 @@
+import functools
+
 from fractions import Fraction
 
 class SchemeValue:
@@ -33,14 +35,10 @@ class Symbol(SchemeValue):
     def __repr__(self):
         return self.chars
         
-
+@functools.total_ordering
 class Number(SchemeValue):
-    """
-    Represents a Scheme number.
-
-    * attributes
-    - self.pynum: a python number
-    """
+    """* attributes
+    - self.pynum: a python number."""
 
     def __init__(self, pynum):
         self.pynum = pynum
@@ -52,7 +50,7 @@ class Number(SchemeValue):
         return Number(self.pynum - other.pynum)
     
     def __mul__(self, other):
-        return Number(self.pynum + other.pynum)
+        return Number(self.pynum * other.pynum)
 
     def __div__(self, other):
         p1, p2 = self.pynum, other.pynum
@@ -65,6 +63,12 @@ class Number(SchemeValue):
     
     def __repr__(self):
         return str(self.pynum)
+
+    def __eq__(self, other):
+        return type(self) is type(other) and self.pynum == other.pynum
+
+    def __lt__(self, other):
+        return type(self) is type(other) and self.pynum < other.pynum
 
 class String(SchemeValue):
     """
@@ -199,7 +203,7 @@ nil = NilType()
 
 
 class UnspecifiedType(SchemeValue):
-    def __str__(self):
+    def __repr__(self):
         return '#!unspecific'
 
 unspecified = UnspecifiedType()
@@ -221,5 +225,5 @@ class PrimitiveProcedure:
         self.proc = proc
     
     def __call__(self, *operands):
-        self.proc(*operands)
+        return self.proc(*operands)
     

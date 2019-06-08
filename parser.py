@@ -6,6 +6,11 @@ import stypes
 from fractions import Fraction
 
 
+def parse_begin(expr_str):
+    slist = parse(expr_str)
+    begin = stypes.Symbol.from_str('begin')
+    return stypes.Cons(begin, slist)
+
 def parse(expr_str):
     """Transforms the string @expr_str to a list of scheme data
     structures.  Raises a ValueError if parsing @expr_str is not

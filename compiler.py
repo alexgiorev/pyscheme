@@ -51,23 +51,36 @@ def definition(slist):
         # valid. ValueError is raised otherwise.
         
         def raiseit():
-            raise ValueError(f'{slist} is not a valid assignment expression')
+            raise ValueError(f'"{slist}" is not a valid definition expression')
         
         cdr = slist.cdr
+        
         if type(cdr) is not stypes.Cons:
             raiseit()
-
-        var = cdr.car
-        if type(var) is not stypes.Symbol:
+            
+        cadr = cdr.car
+        
+        if type(cadr) is stypes.Symbol:
+            # a variable definition
+            var = cadr
+            subexpr = cdr.cdr.car
+            return var, subexpr
+        elif type(cadr) is stypes.Cons:
+            # a function definition
+            
+            for x in cadr:
+                if type(x) is not stypes.Symbol:
+                    raiseit()
+                    
+            var = cadr.car
+            params = cadr.cdr
+            body = cdr.cdr
+            lambda_sym = stypes.Symbol.from_str('lambda')
+            lambda_slist = stypes.Cons(lambda_sym, stypes.Cons(params, body))
+            return var, lambda_slist
+        else:
             raiseit()
-
-        cddr = cdr.cdr
-        if type(cddr) is not stypes.Cons:
-            raiseit()
-
-        subexpr = cddr.car
-        return var, subexpr
-
+            
     var, subexpr = validate()
     subexpr = compile(subexpr)
     return exprs.DefinitionExpr(var, subexpr)
@@ -75,10 +88,10 @@ def definition(slist):
 
 @handler('if')
 def ifexpr(slist):
-    predicate = compile(slist.car)
-    consequent = compile(slist.cdr.car)
-    cddr = slist.cdr.cdr
-    alternative = None if cddr is stypes.nil else compile(cddr.car)
+    predicate = compile(slist.cdr.car)
+    consequent = compile(slist.cdr.cdr.car)
+    cdddr = slist.cdr.cdr.cdr
+    alternative = None if cdddr is stypes.nil else compile(cdddr.car)
     return exprs.IfExpr(predicate, consequent, alternative)
 
 
@@ -130,3 +143,4 @@ def compile(sds):
     # @sds encodes an application expression.
     subexprs = [compile(element) for element in sds.pylist]
     return exprs.ApplicationExpr(subexprs)
+
