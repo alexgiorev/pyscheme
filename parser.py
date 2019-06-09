@@ -21,7 +21,7 @@ def parse(expr_str):
         """Assumes an open parenthesis was encountered and this
         returns an iterator of the tokens up to the closing
         parenthesis. The closing parenthesis is not part of the
-        resulting list. Raises ValueError if there is no closing
+        resulting iterator. Raises ValueError if there is no closing
         parenthesis"""
         
         accum = 1
@@ -38,20 +38,28 @@ def parse(expr_str):
             # all tokens were exhauseted and no closing parenthesis was found
             raise ValueError(f'no closing parenthesis: {expr_str}')        
 
-    def parse_tokens(tokens_iter):
-        elements = [] # will return Cons.iterable2list(elements)
+    def parse_tokens(tokens_iter):        
+        elements = []
         for token in tokens_iter:
             if token == '(':
                 elements.append(parse_tokens(remaining_tokens(tokens_iter)))
+            elif token == '\'':
+                # the loop will end after this block
+                rest = parse_tokens(tokens_iter) # exhausts @tokens_iter         
+                if not rest:
+                    raise ValueError(f'no element after a quote')
+                rest[0] = [stypes.Symbol.from_str('quote'), rest[0]]
+                elements.extend(rest)
             elif isinstance(token, stypes.SchemeValue):
                 elements.append(token)
             else:
                 raise ValueError(f'Invalid token (or valid token at '
                                  f'the wrong position): {token}')
 
-        return stypes.Cons.iterable2list(elements)
+        return elements
 
-    return parse_tokens(iter(tokenize(expr_str)))
+    pytree = parse_tokens(iter(tokenize(expr_str)))
+    return stypes.Cons.pytree2scmtree(pytree)
 
 """
 ================================================================================
@@ -86,6 +94,11 @@ def extraction_func(func):
 def extract_parenthesis(expr_str):
     first_char = expr_str[0]
     return (first_char, expr_str[1:]) if first_char in "()" else None
+
+
+@extraction_func
+def extract_quote(expr_str):
+    return ('\'', expr_str[1:]) if expr_str[0] == '\'' else None
 
 
 @extraction_func

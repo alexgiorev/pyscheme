@@ -160,7 +160,17 @@ class Cons(SchemeValue):
             result = Cons(value, result)
         return result
 
-    
+
+    @staticmethod
+    def pytree2scmtree(pytree):
+        """@pytree must be a python list or a scheme value."""
+        if type(pytree) is list:
+            return Cons.iterable2list(map(Cons.pytree2scmtree, pytree))
+        else:
+            # pytree is a list
+            return pytree
+
+
     @property
     def pylist(self):
         """Returns the python list having the same values as @self. If
