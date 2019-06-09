@@ -9,8 +9,8 @@ from frame import Frame
 class Interpreter:
     """attributes: self.global_env"""
 
-    def __init__(self, global_env):
-        self.global_env = global_env
+    def __init__(self):
+        self.global_env = global_env.make()
     
     def istr(self, expr_str):
         """Evaluates @expr_str in the global environment."""
@@ -45,5 +45,5 @@ class Interpreter:
                 frame_stack.pop()
         return last_value
 
-i = Interpreter(global_env.make())
+i = Interpreter()
 
