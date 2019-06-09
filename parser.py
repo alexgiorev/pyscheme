@@ -87,8 +87,6 @@ def extract_parenthesis(expr_str):
     first_char = expr_str[0]
     return (first_char, expr_str[1:]) if first_char in "()" else None
 
-# used by extract_symbol and extract_number
-_number_regex = r'(\+|-)?(\d+)(/\d+)?'
 
 @extraction_func
 def extract_symbol(expr_str):
@@ -99,14 +97,18 @@ def extract_symbol(expr_str):
     sequence of the above characters.
     """
 
-    charset = '[-+.!A-Za-z0-9!$%&*/:<=>?~_^]'
-
+    charset = '[-+.!A-Za-z0-9$%&*/:<=>?~_^]'
     m = re.match(f'{charset}+', expr_str)
 
     if m:
         astr = m.group()
-        if re.match(f'{_number_regex}$', astr):
+        
+        # if astr is a string that can be interpreted as a number, return None
+        num_attempt = extract_number(astr)
+        if num_attempt is not None and num_attempt[1] == '':
+            # @astr is a number string
             return None
+        
         rest = expr_str[m.end():]
         return (stypes.Symbol.from_str(astr), rest)
     else:
@@ -119,21 +121,31 @@ def extract_number(expr_str):
     syntax:
     <number> := <int>|<frac>
     <int> := (+|-)?<digit>+
+    <float> := (+|-)?<digit>+.<digit>+
     <frac> := (+|-)?<digit>+/<digit>+
     """
     
-    m = re.match(_number_regex, expr_str)
+    intRE = r'(\+|-)?(\d+)'
+    floatRE = r'(\+|-)?(\d+)\.(\d+)'
+    fracRE = r'(\+|-)?(\d+)/(\d+)'
     
-    if not m:
-        return None
-    
-    try:
-        pynum = int(m.group())
-    except ValueError:
-        # the matched string cannot be converted to an int
-        pynum = Fraction(m.group())
+    def try_re(expr_str, RE, numtype):
+        m = re.match(RE, expr_str)
+        
+        if not m:
+            return None
 
-    return (stypes.Number(pynum), expr_str[m.end():])
+        rest = expr_str[m.end():]
+        pynum = numtype(m.group())
+        return pynum, rest
+    
+    for RE, numtype in zip((fracRE, floatRE, intRE), (Fraction, float, int)):
+        attempt = try_re(expr_str, RE, numtype)
+        if attempt is not None:
+            pynum, rest = attempt
+            return (stypes.Number(pynum), rest)
+        
+    return None
 
 
 @extraction_func
