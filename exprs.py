@@ -169,7 +169,8 @@ class ApplicationExpr(Expr):
                 params, step, env = operator.parts
                 
                 if len(params) != len(operands):
-                    raise SchemeArityError(f'expected {len(params)} arguments, but got {len(operands)}')
+                    raise SchemeArityError(f'Expected {len(params)} arguments, '
+                                           f'but got {len(operands)}.')
                 
                 new_env = Environment(params, operands, env)
                 
