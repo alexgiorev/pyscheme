@@ -52,10 +52,10 @@ class Number(SchemeValue):
     def __mul__(self, other):
         return Number(self.pynum * other.pynum)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         p1, p2 = self.pynum, other.pynum
         if type(p1) is type(p2) is int:
-            return Fraction(p1, p2)        
+            return Number(Fraction(p1, p2))
         return Number(self.pynum / other.pynum)
 
     def __neg__(self):
