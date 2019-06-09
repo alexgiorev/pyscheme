@@ -101,6 +101,20 @@ def _(*args):
             return stypes.false
     return stypes.true
 
+
+@globalfunc('abs')
+def _(num):
+    if type(num) is not stypes.SchemeNumber:
+        raise SchemeTypeError(f'argument to abs must be a number')
+    return stypes.SchemeNumber(abs(num.pynum))
+
+
+@globalfunc('square')
+def _(num):
+    if type(num) is not stypes.SchemeNumber:
+        raise SchemeTypeError(f'argument to square must be a number')
+    return stypes.SchemeNumber(num.pynum ** 2)
+
 ################################################################################
 # pairs. TODO: map, fold, reduce...
 
