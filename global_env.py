@@ -21,82 +21,107 @@ def globalfunc(varstr):
 
 ################################################################################
 
+def check_num(arg, funcname):
+    if type(arg) is not stypes.Number:
+        raise SchemeTypeError(f'Error while evaluating {funcname}: '
+                              f'the argument is not a number')
+
+    
+def check_nums(args, funcname):
+    for i, arg in enumerate(args, 1):
+        if type(arg) is not stypes.Number:
+            raise SchemeTypeError(f'Error while evaluating {funcname}: '
+                                  f'argument at position {i} is not a number.')
+
+
 @globalfunc('+')
 def _(*args):
-    result = stypes.Number(0)
-    for i, num in enumerate(args):
-        if type(num) is not stypes.Number:
-            raise SchemeTypeError(f'all arguments to + must be numbers, '
-                                  f'but was given a {type(num)} at {i}')
-        result += num
-    return result
+    check_nums(args, '+')
+    return sum(args, stypes.Number(0))
+
 
 @globalfunc('-')
 def _(*args):
-    result = stypes.Number(0)
-    for i, num in enumerate(args):
-        if type(num) is not stypes.Number:
-            raise SchemeTypeError(f'all arguments to - must be numbers, '
-                                  f'but was given a {type(num)} at {i}')
-        result -= num
-    return result
+    check_nums(args, '-')
+    
+    if not args:
+        raise SchemeArityError('called - without arguments')
+
+    if len(args) == 1:
+        return -args[0]
+
+    itr = iter(args)
+    first = next(itr)
+    return functools.reduce(operator.sub, itr, first)
 
 
 @globalfunc('*')
 def _(*args):
-    result = stypes.Number(1)
-    for i, num in enumerate(args):
-        if type(num) is not stypes.Number:
-            raise SchemeTypeError(f'all arguments to * must be numbers, '
-                                  f'but was given a {type(num)} at {i}')
-        result *= num
-    return result
+    check_nums(args, '*')
+    return functools.reduce(operator.mul, args, stypes.Number(1))
 
 
 @globalfunc('/')
 def _(a, b):
-    if type(a) is not stypes.Number:
-        raise SchemeTypeError(f'first argument is not a number')
-    if type(a) is not stypes.Number:
-        raise SchemeTypeError(f'second argument is not a number')
+    check_nums([a, b], '/')
     return a / b
 
 
 @globalfunc('sub1')
 def _(x):
-    if type(x) is not stypes.Number:
-        raise SchemeTypeError(f'argument is not a number')
+    check_num(x)
     return x - stypes.Number(1)
 
 
 @globalfunc('add1')
 def _(x):
-    if type(x) is not stypes.Number:
-        raise SchemeTypeError(f'argument is not a number')    
+    check_num(x)
     return x + stypes.Number(1)
+
+
+def create_cmps():
+    # All comparison functions are alike; this script creates them all.  It is called
+    # right after this definition, this is only to encapsulate the code.
+    
+    cmp_operators = {'<': operator.lt, '<=': operator.le,
+                     '>': operator.gt, '>=': operator.ge}
+
+    def create(operator_name):
+        cmp_operator = cmp_operators[operator_name]
+        
+        @globalfunc(operator_name)
+        def _(*args):
+            check_nums(args, operator_name)
+
+            if not args:
+                return stypes.true
+
+            last = args[0]
+
+            for num in itertools.islice(args, 1, len(args)):
+                #print(f'last = {last}, num = {num}, name = {name}, result = {cmp_operator(last, num)}')
+                if not cmp_operator(last, num):
+                    return stypes.false
+                last = num
+
+            return stypes.true
+        
+    for operator_name in cmp_operators:
+        create(operator_name)
+        
+create_cmps()
 
 
 @globalfunc('=')
 def _(*args):
+    check_nums(args, '=')
+    
     if not args:
         return stypes.true
-
-    def check(num, i):
-        if type(num) is not stypes.Number:
-            raise SchemeTypeError(f'All arguments should be numbers, '
-                                  'but was given a {type(num)} at {i}.')
     
-    if len(args) == 2:
-        # optimize for the common case
-        n1, n2 = args
-        check(n1, 1), check(n2, 2)
-        return stypes.Boolean.from_bool(n1 == n2)
-
     itr = iter(args)
     first = next(itr)
-    check(first, 1)
-    for i, num in enumerate(itr, 2):
-        check(num, i)
+    for num in itr:
         if first != num:
             return stypes.false
     return stypes.true
@@ -104,19 +129,25 @@ def _(*args):
 
 @globalfunc('abs')
 def _(num):
-    if type(num) is not stypes.SchemeNumber:
-        raise SchemeTypeError(f'argument to abs must be a number')
-    return stypes.SchemeNumber(abs(num.pynum))
+    check_num(num, 'abs')
+    return stypes.Number(abs(num.pynum))
 
 
 @globalfunc('square')
 def _(num):
-    if type(num) is not stypes.SchemeNumber:
-        raise SchemeTypeError(f'argument to square must be a number')
-    return stypes.SchemeNumber(num.pynum ** 2)
+    check_num(num, 'square')
+    return stypes.Number(num.pynum ** 2)
+
 
 ################################################################################
 # pairs. TODO: map, fold, reduce...
+
+def check_pair(x, funcname):
+    if type(x) is not stypes.Cons:
+        raise SchemeTypeError(f'Error while evaluating {funcname}: '
+                              'argument must be a pair.')
+
+
 
 @globalfunc('cons')
 def _(a, b):
@@ -125,17 +156,15 @@ def _(a, b):
 
 @globalfunc('car')
 def _(pair):
-    if type(pair) is not stypes.Cons:
-        raise SchemeTypeError(f'Argument must be a pair')
+    check_pair(pair)
     return pair.car
 
 
 @globalfunc('cdr')
 def _(pair):
-    if type(pair) is not stypes.Cons:
-        raise SchemeTypeError(f'Argument must be a pair')
+    check_pair(pair)
     return pair.cdr
 
 ################################################################################
-# general. TODO: equal?, eq?
+# general. TODO: equal?, eq?, apply
 
