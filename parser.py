@@ -193,6 +193,15 @@ def extract_boolean(expr_str):
         return None
 
 
+def extract_comment(expr_str):
+    """@expr_str begins with ';'. Return the rest after extracting the comment"""
+    comment_end = expr_str.find('\n')
+    if comment_end == -1:
+        return ''
+    else:
+        return expr_str[comment_end + 1:]
+
+    
 def tokenize(expr_str):
     """
     Returns a list of tokens.
@@ -202,15 +211,18 @@ def tokenize(expr_str):
     tokens = [] # will return this
     expr_str = expr_str.lstrip()
     while expr_str:
-        for func in extraction_funcs:
-            res = func(expr_str)
-            if res is not None:
-                token, rest = res
-                tokens.append(token)
-                expr_str = rest.lstrip()
-                break
+        if expr_str[0] == ';':
+            expr_str = extract_comment(expr_str)
         else:
-            # none of the functions in token_funcs was able to
-            # extract a token from expr_str, so raise a ValueError
-            raise ValueError(f'unable to extract a token from {expr_str}')
+            for func in extraction_funcs:
+                res = func(expr_str)
+                if res is not None:
+                    token, rest = res
+                    tokens.append(token)
+                    expr_str = rest.lstrip()
+                    break
+            else:
+                # none of the functions in token_funcs was able to
+                # extract a token from expr_str, so raise a ValueError
+                raise ValueError(f'unable to extract a token from {expr_str}')
     return tokens
