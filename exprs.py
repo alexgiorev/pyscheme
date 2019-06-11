@@ -7,7 +7,7 @@ from environment import Environment
 class Expr:
     """Base class for all expressions.
     * attributes for instances of subclasses
-    - self.main_step: a callable which accepts a single bundle argument. It should be
+    - self.main_step: a callable which accepts a single inter argument. It should be
       evaluatable an arbitrary number of times."""
     pass
 
@@ -15,7 +15,7 @@ class Expr:
 class SelfEvaluatingExpr(Expr):
     def __init__(self, value):
         self.value = value
-        self.main_step = lambda bundle: value
+        self.main_step = lambda inter: value
 
     def __str__(self):
         return str(self.value)
@@ -23,7 +23,7 @@ class SelfEvaluatingExpr(Expr):
 class QuoteExpr(Expr):
     def __init__(self, slist):
         self.slist = slist
-        self.main_step = lambda bundle: slist
+        self.main_step = lambda inter: slist
 
     def __str__(self):
         return f'(quote {self.slist})'
@@ -31,7 +31,7 @@ class QuoteExpr(Expr):
 class VariableExpr(Expr):
     def __init__(self, var):
         self.var = var
-        self.main_step = lambda bundle: bundle.env.lookup(self.var)
+        self.main_step = lambda inter: inter.env.lookup(self.var)
 
     def __str__(self):
         return str(self.var)
@@ -47,12 +47,12 @@ class AssignmentExpr(Expr):
     def _create_main_step(var, subexpr):
         subexpr_main_step = subexpr.main_step
         
-        def value_handler(bundle):
-            bundle.env.set_variable_value(var, bundle.last_value)
+        def value_handler(inter):
+            inter.env.set_variable_value(var, inter.last_value)
             
-        def main_step(bundle):
-            bundle.step_stack.append(value_handler)
-            bundle.step_stack.append(subexpr_main_step)
+        def main_step(inter):
+            inter.step_stack.append(value_handler)
+            inter.step_stack.append(subexpr_main_step)
             
         return main_step
 
@@ -69,12 +69,12 @@ class DefinitionExpr(Expr):
     def _create_main_step(var, subexpr):
         subexpr_main_step = subexpr.main_step
         
-        def value_handler(bundle):
-            bundle.env.define_variable(var, bundle.last_value)
+        def value_handler(inter):
+            inter.env.define_variable(var, inter.last_value)
             
-        def main_step(bundle):
-            bundle.step_stack.append(value_handler)
-            bundle.step_stack.append(subexpr_main_step)
+        def main_step(inter):
+            inter.step_stack.append(value_handler)
+            inter.step_stack.append(subexpr_main_step)
             
         return main_step
 
@@ -94,17 +94,17 @@ class IfExpr(Expr):
         consequent_step = consequent.main_step
         alternative_step = None if alternative is None else alternative.main_step
         
-        def pred_value_handler(bundle):
-            if bundle.last_value is stypes.false:
+        def pred_value_handler(inter):
+            if inter.last_value is stypes.false:
                 if alternative is None:
                     return stypes.unspecified
-                bundle.step_stack.append(alternative_step)
+                inter.step_stack.append(alternative_step)
             else:
-                bundle.step_stack.append(consequent_step)
+                inter.step_stack.append(consequent_step)
 
-        def main_step(bundle):
-            bundle.step_stack.append(pred_value_handler)
-            bundle.step_stack.append(predicate_step)
+        def main_step(inter):
+            inter.step_stack.append(pred_value_handler)
+            inter.step_stack.append(predicate_step)
 
         return main_step
 
@@ -125,8 +125,8 @@ class LambdaExpr(Expr):
     @staticmethod
     def _create_main_step(params, body):
         compiled_body = BeginExpr(body).main_step
-        return (lambda bundle:
-                stypes.CompoundProcedure(params, compiled_body, bundle.env))
+        return (lambda inter:
+                stypes.CompoundProcedure(params, compiled_body, inter.env))
 
     def __str__(self):
         params_str = f"({' '.join(str(param) for param in self.params)})"
@@ -143,8 +143,8 @@ class BeginExpr(Expr):
     @staticmethod
     def _create_main_step(exprs):
         steps_reversed = [expr.main_step for expr in reversed(exprs)]
-        return (lambda bundle:
-                bundle.step_stack.extend(steps_reversed))
+        return (lambda inter:
+                inter.step_stack.extend(steps_reversed))
 
     def __str__(self):
         exprs_str = ' '.join(str(expr) for expr in self.exprs)
@@ -158,8 +158,8 @@ class ApplicationExpr(Expr):
 
     @staticmethod
     def _create_main_step(exprs):        
-        def values_handler(bundle):
-            values = bundle.last_value # the list of sub-expressions' values
+        def values_handler(inter):
+            values = inter.last_value # the list of sub-expressions' values
             operator = values[0]
             operands = values[1:]
             
@@ -174,17 +174,17 @@ class ApplicationExpr(Expr):
                 
                 new_env = Environment(params, operands, env)
                 
-                if not bundle.step_stack: # tail call optimization
-                    bundle.frame_stack.pop()
+                if not inter.step_stack: # tail call optimization
+                    inter.frame_stack.pop()
                     
-                bundle.frame_stack.append(Frame(step, new_env))
+                inter.frame_stack.append(Frame(step, new_env))
             else:
                 raise SchemeTypeError(f'{operator} is not applicable')
         
         steps = [expr.main_step for expr in exprs]
-        def main_step(bundle):
-            bundle.step_stack.append(values_handler)
-            bundle.step_stack.append(Sequencer(iter(steps)))
+        def main_step(inter):
+            inter.step_stack.append(values_handler)
+            inter.step_stack.append(Sequencer(iter(steps)))
 
         return main_step
 
@@ -202,19 +202,19 @@ class Sequencer:
         self.result = []
 
         
-    def value_handler(self, bundle):
-        self.result.append(bundle.last_value)
+    def value_handler(self, inter):
+        self.result.append(inter.last_value)
         next_step = next(self.steps, None)
         
         if next_step is None:
             return self.result
 
-        bundle.step_stack.append(self.value_handler)
-        bundle.step_stack.append(next_step)
+        inter.step_stack.append(self.value_handler)
+        inter.step_stack.append(next_step)
         
         
-    def __call__(self, bundle):
+    def __call__(self, inter):
         first_step = next(self.steps)
-        bundle.step_stack.append(self.value_handler)
-        bundle.step_stack.append(first_step)
+        inter.step_stack.append(self.value_handler)
+        inter.step_stack.append(first_step)
         
