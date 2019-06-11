@@ -8,18 +8,25 @@ import stypes
 from environment import Environment
 from exceptions import *
 
+namespace = {} # maps symbols to functions
+
 def make():
     return Environment.from_dict(namespace, None)
 
-namespace = {} # maps symbols to functions
 
+def bind(name, scheme_obj):
+    sym = stypes.Symbol.from_str(name)
+    namespace[sym] = scheme_obj
+
+    
 def globalfunc(varstr):
-    symbol = stypes.Symbol.from_str(varstr)
-    def decorator(func):        
-        namespace[symbol] = stypes.PrimitiveProcedure(func)
+    def decorator(func):
+        bind(varstr, stypes.PrimitiveProcedure(func))
+        return func
     return decorator
 
 ################################################################################
+# numeric functions
 
 def check_num(arg, funcname):
     if type(arg) is not stypes.Number:
@@ -147,6 +154,8 @@ def check_pair(x, funcname):
         raise SchemeTypeError(f'Error while evaluating {funcname}: '
                               'argument must be a pair.')
 
+    
+bind('nil', stypes.nil)
 
 
 @globalfunc('cons')
@@ -165,6 +174,17 @@ def _(pair):
     check_pair(pair)
     return pair.cdr
 
+
+@globalfunc('list')
+def _(*args):
+    return stypes.Cons.iterable2list(args)
+
+
+@globalfunc('empty?')
+def _(arg):
+    return arg is stypes.nil
+
+    
 ################################################################################
 # general. TODO: equal?, eq?, apply
 
