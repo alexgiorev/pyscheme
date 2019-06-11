@@ -221,6 +221,11 @@ unspecified = UnspecifiedType()
 
 class CompoundProcedure(SchemeValue):
     def __init__(self, params, step, env):
+        """
+        @params must be a list of symbols
+        @step must be a step
+        @env must be an environment"""
+        
         self.params = params
         self.step = step
         self.env = env
