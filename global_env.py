@@ -42,13 +42,13 @@ def check_nums(args, funcname):
 
 
 @globalfunc('+')
-def _(*args):
+def _(inter, *args):
     check_nums(args, '+')
     return sum(args, stypes.Number(0))
 
 
 @globalfunc('-')
-def _(*args):
+def _(inter, *args):
     check_nums(args, '-')
     
     if not args:
@@ -63,25 +63,25 @@ def _(*args):
 
 
 @globalfunc('*')
-def _(*args):
+def _(inter, *args):
     check_nums(args, '*')
     return functools.reduce(operator.mul, args, stypes.Number(1))
 
 
 @globalfunc('/')
-def _(a, b):
+def _(inter, a, b):
     check_nums([a, b], '/')
     return a / b
 
 
 @globalfunc('sub1')
-def _(x):
+def _(inter, x):
     check_num(x)
     return x - stypes.Number(1)
 
 
 @globalfunc('add1')
-def _(x):
+def _(inter, x):
     check_num(x)
     return x + stypes.Number(1)
 
@@ -97,7 +97,7 @@ def create_cmps():
         cmp_operator = cmp_operators[operator_name]
         
         @globalfunc(operator_name)
-        def _(*args):
+        def _(inter, *args):
             check_nums(args, operator_name)
 
             if not args:
@@ -120,7 +120,7 @@ create_cmps()
 
 
 @globalfunc('=')
-def _(*args):
+def _(inter, *args):
     check_nums(args, '=')
     
     if not args:
@@ -135,13 +135,13 @@ def _(*args):
 
 
 @globalfunc('abs')
-def _(num):
+def _(inter, num):
     check_num(num, 'abs')
     return stypes.Number(abs(num.pynum))
 
 
 @globalfunc('square')
-def _(num):
+def _(inter, num):
     check_num(num, 'square')
     return stypes.Number(num.pynum ** 2)
 
@@ -159,29 +159,29 @@ bind('nil', stypes.nil)
 
 
 @globalfunc('cons')
-def _(a, b):
+def _(inter, a, b):
     return stypes.Cons(a, b)
 
 
 @globalfunc('car')
-def _(pair):
+def _(inter, pair):
     check_pair(pair)
     return pair.car
 
 
 @globalfunc('cdr')
-def _(pair):
+def _(inter, pair):
     check_pair(pair)
     return pair.cdr
 
 
 @globalfunc('list')
-def _(*args):
+def _(inter, *args):
     return stypes.Cons.iterable2list(args)
 
 
 @globalfunc('empty?')
-def _(arg):
+def _(inter, arg):
     return arg is stypes.nil
 
     

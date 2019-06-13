@@ -164,7 +164,7 @@ class ApplicationExpr(Expr):
             operands = values[1:]
             
             if type(operator) is stypes.PrimitiveProcedure:
-                return operator(*operands)
+                return operator(inter, *operands)
             elif type(operator) is stypes.CompoundProcedure:
                 params, step, env = operator.parts
                 
