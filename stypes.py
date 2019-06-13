@@ -129,8 +129,12 @@ class String(SchemeValue):
         result = String.__new__(String)
         result.chars = ''.join(chars)
         return result
-                        
 
+
+    def __eq__(self, other):
+        return type(other) is String and self.chars == other.chars
+
+    
     def __repr__(self):
         return f'"{self.chars}"'
 
@@ -211,7 +215,8 @@ class Cons(SchemeValue):
                 return
             if type(pair) is not Cons:
                 raise ValueError(f'{self} is not a scheme list')
-    
+
+            
     def __str__(self):
         """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""
         if type(self.cdr) is Cons:
@@ -220,7 +225,14 @@ class Cons(SchemeValue):
             return f'({str(self.car)})'
         else:
             return (f'({str(self.car)} . {str(self.cdr)})')
+
         
+    def __eq__(self, other):
+        return (type(other) is type(self)
+                and self.car == other.car
+                and self.cdr == other.cdr)
+
+
 class NilType(SchemeValue):
     def __bool__(self):
         return False
