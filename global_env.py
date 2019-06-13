@@ -162,7 +162,7 @@ def _(inter, num):
 
 
 ################################################################################
-# pairs. TODO: map, fold, reduce...
+# pair and list functions
 
 def check_pair(x, funcname):
     if type(x) is not Cons:
@@ -221,6 +221,42 @@ def _(inter, func, *lists):
     inter.step_stack.append(values_handler)
     inter.step_stack.append(sequencer)
 
+
+@globalfunc('foldl')
+def _(inter, func, init, alist):
+    values = iter(alist)
+    
+    def value_handler(inter):
+        try:
+            value = next(values)
+        except StopIteration:
+            return inter.last_value
+
+        caller = steptools.Caller(func, (value, inter.last_value))
+        inter.step_stack.append(value_handler)
+        inter.step_stack.append(caller)
+
+    inter.step_stack.append(value_handler)
+    inter.step_stack.append(steptools.Identity(init))
+
+
+@globalfunc('foldr')
+def _(inter, func, init, alist):
+    values = reversed(list(alist))
+    
+    def value_handler(inter):
+        try:
+            value = next(values)
+        except StopIteration:
+            return inter.last_value
+
+        caller = steptools.Caller(func, (value, inter.last_value))
+        inter.step_stack.append(value_handler)
+        inter.step_stack.append(caller)
+
+    inter.step_stack.append(value_handler)
+    inter.step_stack.append(steptools.Identity(init))
+    
 ################################################################################
 # general. TODO: equal?, eq?, apply
 
