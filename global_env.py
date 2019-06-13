@@ -5,6 +5,9 @@ import operator
 import itertools
 
 import stypes
+import steptools
+
+from stypes import * # for convenience
 from environment import Environment
 from exceptions import *
 
@@ -15,13 +18,13 @@ def make():
 
 
 def bind(name, scheme_obj):
-    sym = stypes.Symbol.from_str(name)
+    sym = Symbol.from_str(name)
     namespace[sym] = scheme_obj
 
     
 def globalfunc(varstr):
     def decorator(func):
-        bind(varstr, stypes.PrimitiveProcedure(func))
+        bind(varstr, PrimitiveProcedure(func))
         return func
     return decorator
 
@@ -29,22 +32,22 @@ def globalfunc(varstr):
 # numeric functions
 
 def check_num(arg, funcname):
-    if type(arg) is not stypes.Number:
+    if type(arg) is not Number:
         raise SchemeTypeError(f'Error while evaluating {funcname}: '
                               f'the argument is not a number')
 
     
 def check_nums(args, funcname):
     for i, arg in enumerate(args, 1):
-        if type(arg) is not stypes.Number:
+        if type(arg) is not Number:
             raise SchemeTypeError(f'Error while evaluating {funcname}: '
-                                  f'argument at position {i} is not a number.')
+                                  f'argument at position {i} is not a number: {arg}')
 
 
 @globalfunc('+')
 def _(inter, *args):
     check_nums(args, '+')
-    return sum(args, stypes.Number(0))
+    return sum(args, Number(0))
 
 
 @globalfunc('-')
@@ -65,7 +68,7 @@ def _(inter, *args):
 @globalfunc('*')
 def _(inter, *args):
     check_nums(args, '*')
-    return functools.reduce(operator.mul, args, stypes.Number(1))
+    return functools.reduce(operator.mul, args, Number(1))
 
 
 @globalfunc('/')
@@ -77,13 +80,13 @@ def _(inter, a, b):
 @globalfunc('sub1')
 def _(inter, x):
     check_num(x)
-    return x - stypes.Number(1)
+    return x - Number(1)
 
 
 @globalfunc('add1')
 def _(inter, x):
     check_num(x)
-    return x + stypes.Number(1)
+    return x + Number(1)
 
 
 def create_cmps():
@@ -137,20 +140,32 @@ def _(inter, *args):
 @globalfunc('abs')
 def _(inter, num):
     check_num(num, 'abs')
-    return stypes.Number(abs(num.pynum))
+    return Number(abs(num.pynum))
 
 
 @globalfunc('square')
 def _(inter, num):
     check_num(num, 'square')
-    return stypes.Number(num.pynum ** 2)
+    return Number(num.pynum ** 2)
+
+
+@globalfunc('even?')
+def _(inter, num):
+    check_num(num, 'even?')
+    return Boolean(num.is_even)
+
+
+@globalfunc('odd?')
+def _(inter, num):
+    check_num(num, 'even?')
+    return Boolean(num.is_odd)
 
 
 ################################################################################
 # pairs. TODO: map, fold, reduce...
 
 def check_pair(x, funcname):
-    if type(x) is not stypes.Cons:
+    if type(x) is not Cons:
         raise SchemeTypeError(f'Error while evaluating {funcname}: '
                               'argument must be a pair.')
 
@@ -160,7 +175,7 @@ bind('nil', stypes.nil)
 
 @globalfunc('cons')
 def _(inter, a, b):
-    return stypes.Cons(a, b)
+    return Cons(a, b)
 
 
 @globalfunc('car')
@@ -177,14 +192,26 @@ def _(inter, pair):
 
 @globalfunc('list')
 def _(inter, *args):
-    return stypes.Cons.iterable2list(args)
+    return Cons.iterable2list(args)
 
 
 @globalfunc('empty?')
 def _(inter, arg):
     return arg is stypes.nil
 
+
+@globalfunc('filter')
+def _(inter, pred, lst):
+    def values_handler(inter):
+        bool_results = inter.last_value
+        return Cons.iterable2list((value for value, include_it in zip(lst, bool_results)
+                                   if include_it))
     
+    sequencer = steptools.Sequencer(steptools.Caller(pred, [arg]) for arg in lst)
+    inter.step_stack.append(values_handler)
+    inter.step_stack.append(sequencer)
+        
+
 ################################################################################
 # general. TODO: equal?, eq?, apply
 
