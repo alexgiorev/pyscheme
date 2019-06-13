@@ -210,7 +210,16 @@ def _(inter, pred, lst):
     sequencer = steptools.Sequencer(steptools.Caller(pred, [arg]) for arg in lst)
     inter.step_stack.append(values_handler)
     inter.step_stack.append(sequencer)
-        
+
+
+@globalfunc('map')
+def _(inter, func, *lists):
+    def values_handler(inter):
+        return Cons.iterable2list(inter.last_value)
+
+    sequencer = steptools.Sequencer(steptools.Caller(func, args) for args in zip(*lists))
+    inter.step_stack.append(values_handler)
+    inter.step_stack.append(sequencer)
 
 ################################################################################
 # general. TODO: equal?, eq?, apply
