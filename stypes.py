@@ -162,7 +162,19 @@ Boolean._objects[False] = false
 class Cons(SchemeValue):
     def __init__(self, car, cdr):
         self.car = car
-        self.cdr = cdr
+        self._cdr = cdr # use underscore, because I want custom attribute setting
+        self.is_list = cdr is nil or type(cdr) is Cons and cdr.is_list    
+
+        
+    @property # how to achieve custom attribute setting without property?
+    def cdr(self):
+        return self._cdr
+
+    
+    @cdr.setter
+    def cdr(self, cdr):
+        self._cdr = cdr
+        self.is_list = cdr is nil or type(cdr) is Cons and cdr.is_list
 
         
     @staticmethod
@@ -194,24 +206,30 @@ class Cons(SchemeValue):
     @property
     def pylist(self):
         """Returns the python list having the same values as @self. If
-        @self does not encode a list, a ValueError is raised."""
+        @self does not encode a list, a ValueError is raised."""        
         return list(self)
 
     
     def __iter__(self):
-        """@self must encode a scheme list for this function to work
-        properly. Otherwise, the first time you enter a cdr which is
-        not a Cons, a ValueError will be raised."""
+        """If @self is a scheme list, returns an iterator if it's elements. Otherwise, a
+        ValueError is raised."""
+        
+        if not self.is_list:
+            raise ValueError(f'the cons cell {self} is not a list')
 
-        pair = self
-        while True:
-            yield pair.car
-            pair = pair.cdr
-            if pair is nil:
-                return
-            if type(pair) is not Cons:
-                raise ValueError(f'{self} is not a scheme list')                    
-    
+        def the_iter():
+            # this code is in a function so that calling __iter__ will raise a ValueError
+            # immediately and not the first time next is used.
+            
+            pair = self
+            while True:
+                yield pair.car
+                pair = pair.cdr
+                if pair is nil:
+                    return
+        
+        return the_iter()
+            
     def __str__(self):
         """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""
         if type(self.cdr) is Cons:
@@ -220,6 +238,7 @@ class Cons(SchemeValue):
             return f'({str(self.car)})'
         else:
             return (f'({str(self.car)} . {str(self.cdr)})')
+
         
 class NilType(SchemeValue):
     def __bool__(self):
