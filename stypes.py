@@ -2,11 +2,19 @@ import functools
 
 from fractions import Fraction
 
+__all__ = []
+
+def importit(cls):
+    __all__.append(cls.__name__)
+    return cls
+
+@importit
 class SchemeValue:
     '''Base class for all scheme types. Useful for checking if an
     object is a scheme object'''
     pass
 
+@importit
 class Symbol(SchemeValue):
     """
     Symbols are interned.
@@ -34,7 +42,8 @@ class Symbol(SchemeValue):
 
     def __repr__(self):
         return self.chars
-        
+
+@importit    
 @functools.total_ordering
 class Number(SchemeValue):
     """* attributes
@@ -70,6 +79,20 @@ class Number(SchemeValue):
     def __lt__(self, other):
         return type(self) is type(other) and self.pynum < other.pynum
 
+    @property
+    def is_even(self):
+        return self.is_int and self.pynum % 2 == 0
+
+    @property
+    def is_odd(self):
+        return self.is_int and self.pynum % 2 == 1
+    
+    @property
+    def is_int(self):
+        return type(self.pynum) is int
+
+
+@importit    
 class String(SchemeValue):
     """
     * attributes
@@ -111,7 +134,8 @@ class String(SchemeValue):
     def __repr__(self):
         return f'"{self.chars}"'
 
-    
+
+@importit    
 class Boolean(SchemeValue):
     """There are only 2 boolean objects. Constructors return those
     objects, they don't create new ones."""
@@ -120,25 +144,21 @@ class Boolean(SchemeValue):
     # the class statement. Maps python booleans to the scheme booleans.
     # {True: <the scheme true value>, False: <the scheme false value>}
     _objects = {}
-    
-    @staticmethod
-    def from_bool(abool):
-        """Returns the Scheme boolean with the same truth value as
-        @abool, which must be a python boolean"""
-        
-        if type(abool) is not bool:
-            raise TypeError(f'argument must be of type bool, not {type(abool)}')
-        return Boolean._objects[abool]
 
     def __repr__(self):
         return '#f' if self is Boolean._objects[False] else '#t'
 
+    def __bool__(self):
+        return self is Boolean._objects[True]
+
 true = Boolean.__new__(Boolean)
 false = Boolean.__new__(Boolean)
+Boolean.__new__ = lambda cls, abool: Boolean._objects[bool(abool)]
 Boolean._objects[True] = true
 Boolean._objects[False] = false
 
 
+@importit
 class Cons(SchemeValue):
     def __init__(self, car, cdr):
         self.car = car
@@ -200,7 +220,6 @@ class Cons(SchemeValue):
             return f'({str(self.car)})'
         else:
             return (f'({str(self.car)} . {str(self.cdr)})')
-
         
 class NilType(SchemeValue):
     def __bool__(self):
@@ -208,6 +227,9 @@ class NilType(SchemeValue):
 
     def __str__(self):
         return "'()"
+
+    def __iter__(self):
+        return iter([])
     
 nil = NilType()
 
@@ -219,6 +241,7 @@ class UnspecifiedType(SchemeValue):
 unspecified = UnspecifiedType()
 
 
+@importit
 class CompoundProcedure(SchemeValue):
     def __init__(self, params, step, env):
         """
@@ -234,7 +257,8 @@ class CompoundProcedure(SchemeValue):
     def parts(self):
         return (self.params, self.step, self.env)
     
-        
+
+@importit    
 class PrimitiveProcedure:
     def __init__(self, proc):
         self.proc = proc

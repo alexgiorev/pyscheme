@@ -3,6 +3,7 @@ import re
 
 import stypes
 
+from stypes import *
 from fractions import Fraction
 
 
@@ -199,9 +200,9 @@ def extract_boolean(expr_str):
     first2 = expr_str[:2]
     
     if first2 == '#t':
-        return (stypes.Boolean.from_bool(True), expr_str[2:])
+        return (Boolean(True), expr_str[2:])
     elif first2 == '#f':
-        return (stypes.Boolean.from_bool(False), expr_str[2:])
+        return (Boolean(False), expr_str[2:])
     else:
         return None
 
