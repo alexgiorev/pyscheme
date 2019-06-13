@@ -178,15 +178,27 @@ def _(inter, a, b):
     return Cons(a, b)
 
 
+@globalfunc('set-car!')
+def _(inter, pair, newcar):
+    check_pair(pair, 'set-car!')
+    pair.car = newcar
+
+
+@globalfunc('set-cdr!')
+def _(inter, pair, newcdr):
+    check_pair(pair, 'set-cdr!')
+    pair.cdr = newcdr
+    
+    
 @globalfunc('car')
 def _(inter, pair):
-    check_pair(pair)
+    check_pair(pair, 'car')
     return pair.car
 
 
 @globalfunc('cdr')
 def _(inter, pair):
-    check_pair(pair)
+    check_pair(pair, 'cdr')
     return pair.cdr
 
 
