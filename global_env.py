@@ -258,5 +258,18 @@ def _(inter, func, init, alist):
     inter.step_stack.append(steptools.Identity(init))
     
 ################################################################################
-# general. TODO: equal?, eq?, apply
+
+@globalfunc('apply')
+def _(inter, func, alist):
+    return inter.step_stack.append(steptools.Caller(func, list(alist)))
+
+
+@globalfunc('eq?')
+def _(inter, arg1, arg2):
+    return Boolean(arg1 is arg2)
+
+
+@globalfunc('equal?')
+def _(inter, arg1, arg2):
+    return Boolean(arg1 == arg2) # delegate to the objects
 
