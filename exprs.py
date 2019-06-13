@@ -1,4 +1,5 @@
 import stypes
+import steptools
 
 from frame import Frame
 from exceptions import *
@@ -162,59 +163,15 @@ class ApplicationExpr(Expr):
             values = inter.last_value # the list of sub-expressions' values
             operator = values[0]
             operands = values[1:]
-            
-            if type(operator) is stypes.PrimitiveProcedure:
-                return operator(inter, *operands)
-            elif type(operator) is stypes.CompoundProcedure:
-                params, step, env = operator.parts
-                
-                if len(params) != len(operands):
-                    raise SchemeArityError(f'Expected {len(params)} arguments, '
-                                           f'but got {len(operands)}.')
-                
-                new_env = Environment(params, operands, env)
-                
-                if not inter.step_stack: # tail call optimization
-                    inter.frame_stack.pop()
-                    
-                inter.frame_stack.append(Frame(step, new_env))
-            else:
-                raise SchemeTypeError(f'{operator} is not applicable')
+            inter.step_stack.append(steptools.Caller(operator, operands))
         
         steps = [expr.main_step for expr in exprs]
         def main_step(inter):
             inter.step_stack.append(values_handler)
-            inter.step_stack.append(Sequencer(iter(steps)))
+            inter.step_stack.append(steptools.Sequencer(iter(steps)))
 
         return main_step
 
     def __str__(self):
         return f"({' '.join(str(expr) for expr in self.exprs)})"
 
-
-class Sequencer:
-    """The result of a Sequencer is a list of the values of it's expressions in the same
-    order."""
-    
-    def __init__(self, steps):
-        """@steps must be a non-empty iterator of steps."""
-        self.steps = steps
-        self.result = []
-
-        
-    def value_handler(self, inter):
-        self.result.append(inter.last_value)
-        next_step = next(self.steps, None)
-        
-        if next_step is None:
-            return self.result
-
-        inter.step_stack.append(self.value_handler)
-        inter.step_stack.append(next_step)
-        
-        
-    def __call__(self, inter):
-        first_step = next(self.steps)
-        inter.step_stack.append(self.value_handler)
-        inter.step_stack.append(first_step)
-        
