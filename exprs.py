@@ -16,7 +16,7 @@ class Expr:
 class SelfEvaluatingExpr(Expr):
     def __init__(self, value):
         self.value = value
-        self.main_step = lambda inter: value
+        self.main_step = steptools.Identity(value)
 
     def __str__(self):
         return str(self.value)
@@ -24,7 +24,7 @@ class SelfEvaluatingExpr(Expr):
 class QuoteExpr(Expr):
     def __init__(self, slist):
         self.slist = slist
-        self.main_step = lambda inter: slist
+        self.main_step = steptools.Identity(slist)
 
     def __str__(self):
         return f'(quote {self.slist})'

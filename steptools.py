@@ -66,3 +66,5 @@ class Caller:
             raise SchemeTypeError(f'{operator} is not applicable')
 
         
+def Identity(value):
+    return lambda inter: value
