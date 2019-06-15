@@ -149,15 +149,17 @@ class Boolean(SchemeValue):
     # {True: <the scheme true value>, False: <the scheme false value>}
     _objects = {}
 
+    def __new__(cls, pybool):
+        return Boolean._objects[bool(pybool)]
+    
     def __repr__(self):
         return '#f' if self is Boolean._objects[False] else '#t'
 
     def __bool__(self):
         return self is Boolean._objects[True]
-
-true = Boolean.__new__(Boolean)
-false = Boolean.__new__(Boolean)
-Boolean.__new__ = lambda cls, abool: Boolean._objects[bool(abool)]
+    
+true = object.__new__(Boolean)
+false = object.__new__(Boolean)
 Boolean._objects[True] = true
 Boolean._objects[False] = false
 
