@@ -230,7 +230,7 @@ class Cons(SchemeValue):
             if type(pair) is not Cons:
                 raise ValueError(f'{self} is not a scheme list')
 
-
+            
     @property
     def cadr(self):
         """Assumes self.cdr is a Cons"""
@@ -241,6 +241,12 @@ class Cons(SchemeValue):
     def cddr(self):
         """Assumes self.cdr is a Cons"""        
         return self.cdr.cdr
+
+    
+    @property
+    def caddr(self):
+        """Assumes self.cdr and self.cddr are pairs."""
+        return self.cdr.cdr.car
 
     
     def __getitem__(self, index):
