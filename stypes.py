@@ -196,6 +196,18 @@ class Cons(SchemeValue):
             # pytree is a list
             return pytree
 
+        
+    @property
+    def is_list(self):
+        """Returns True only if @self represents a scheme list."""
+        current = self
+        while True:
+            current = current.cdr
+            if current is nil:
+                return True
+            if type(current) is not Cons:
+                return False
+        
 
     @property
     def pylist(self):
@@ -221,11 +233,13 @@ class Cons(SchemeValue):
 
     @property
     def cadr(self):
+        """Assumes self.cdr is a Cons"""
         return self.cdr.car
 
     
     @property
     def cddr(self):
+        """Assumes self.cdr is a Cons"""        
         return self.cdr.cdr
 
     
