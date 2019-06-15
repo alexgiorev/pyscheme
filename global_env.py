@@ -18,7 +18,7 @@ def make():
 
 
 def bind(name, scheme_obj):
-    sym = Symbol.from_str(name)
+    sym = Symbol(name)
     namespace[sym] = scheme_obj
 
     

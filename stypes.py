@@ -28,22 +28,23 @@ class Symbol(SchemeValue):
     # _interned_symbols maps strings to Symbol objects which have the
     # same characters as the string
     _interned_symbols = {}
-    
-    @staticmethod
-    def from_str(astr):
+
+    def __new__(cls, astr):
         """Returns the symbol with the same letters as @astr"""
+        
         symbol = Symbol._interned_symbols.get(astr)
         
         if symbol is None:
-            newsymbol = Symbol.__new__(Symbol)
+            newsymbol = object.__new__(Symbol)
             newsymbol.chars = astr
             Symbol._interned_symbols[astr] = newsymbol
             return newsymbol
 
         return symbol
-
+        
     def __repr__(self):
         return self.chars
+
 
 @importit    
 @functools.total_ordering
@@ -100,9 +101,8 @@ class String(SchemeValue):
     * attributes
     - self.chars: a python string which represents the characters of the string
     """
-    
-    @staticmethod
-    def from_str(astr):
+
+    def __init__(self, chars):
         """Converts the python string @astr to a Scheme string having
         the same letters (except that escapes in @astr are actually
         expanded in the resulting scheme string)"""
@@ -128,11 +128,9 @@ class String(SchemeValue):
                 chars.append(char)
                 i += 1
                 
-        result = String.__new__(String)
-        result.chars = ''.join(chars)
-        return result
-
-
+        self.chars = ''.join(chars)
+        
+    
     def __eq__(self, other):
         return type(other) is String and self.chars == other.chars
 
@@ -227,7 +225,8 @@ class Cons(SchemeValue):
     @property
     def cddr(self):
         return self.cdr.cdr
-            
+
+    
     def __getitem__(self, index):
         """If @self is a list and 0 <= @index < length of @self, return the object at
         @index. If the index is not valid, raises an IndexError. If @self is not a list,
@@ -243,7 +242,8 @@ class Cons(SchemeValue):
             i -= 1
             
         raise IndexError(f'index too large: {index}')
-            
+
+    
     def __str__(self):
         """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""
         if type(self.cdr) is Cons:

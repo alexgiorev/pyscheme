@@ -1,12 +1,14 @@
 import exprs
 import stypes
 
+from stypes import *
+
 # maps symbols to functions which compile lists which have as first
 # element that same symbol
 handlers = {}
 
 def handler(symname):
-    symbol = stypes.Symbol.from_str(symname)
+    symbol = stypes.Symbol(symname)
     
     def decorator(func):
         handlers[symbol] = func
@@ -81,7 +83,7 @@ def definition(slist):
             var = cadr.car
             params = cadr.cdr
             body = cdr.cdr
-            lambda_sym = stypes.Symbol.from_str('lambda')
+            lambda_sym = stypes.Symbol('lambda')
             lambda_slist = stypes.Cons(lambda_sym, stypes.Cons(params, body))
             return var, lambda_slist
         else:
@@ -123,6 +125,15 @@ def lambdaexpr(slist):
     body = [compile(subexpr) for subexpr in body]
     return exprs.LambdaExpr(params, body)
 
+
+@handler('let')
+def letexpr(slist):
+    def tolambda(slist):
+        bindings = slist[1]
+        body = slist.cddr        
+        params = [binding.car for binding in bindings]
+        arguments = [binding.cadr for binding in bindings]
+        lambda_expr = [Symbol('lambda'), 
 
 @handler('begin')
 def beginexpr(slist):

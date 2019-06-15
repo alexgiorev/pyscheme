@@ -9,8 +9,9 @@ from fractions import Fraction
 
 def parse_begin(expr_str):
     slist = parse(expr_str)
-    begin = stypes.Symbol.from_str('begin')
+    begin = stypes.Symbol('begin')
     return stypes.Cons(begin, slist)
+
 
 def parse(expr_str):
     """Transforms the string @expr_str to a list of scheme data
@@ -49,7 +50,7 @@ def parse(expr_str):
                 rest = parse_tokens(tokens_iter) # exhausts @tokens_iter         
                 if not rest:
                     raise ValueError(f'no element after a quote')
-                rest[0] = [stypes.Symbol.from_str('quote'), rest[0]]
+                rest[0] = [stypes.Symbol('quote'), rest[0]]
                 elements.extend(rest)
             elif isinstance(token, stypes.SchemeValue):
                 elements.append(token)
@@ -124,7 +125,7 @@ def extract_symbol(expr_str):
             return None
         
         rest = expr_str[m.end():]
-        return (stypes.Symbol.from_str(astr), rest)
+        return (stypes.Symbol(astr), rest)
     else:
         return None
         
@@ -187,7 +188,7 @@ def extract_string(expr_str):
         return None
     else:
         chars = expr_str[1:edqi]
-        return (stypes.String.from_str(chars), expr_str[edqi+1:])
+        return (stypes.String(chars), expr_str[edqi+1:])
 
 
 @extraction_func
