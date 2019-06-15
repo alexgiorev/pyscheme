@@ -109,7 +109,7 @@ def lambdaexpr(slist):
         raise ValueError(f'{slist} is not a valid lambda expression')
         
     params = slist.cdr.car
-    if type(params) is not Cons:
+    if type(params) is not Cons and params is not stypes.nil:
         raiseit()
 
     params = params.pylist
@@ -128,16 +128,24 @@ def lambdaexpr(slist):
 
 @handler('let')
 def letexpr(slist):
-    def tolambda(slist):
-        bindings = slist[1]
-        body = slist.cddr        
-        params = [binding.car for binding in bindings]
-        arguments = [binding.cadr for binding in bindings]
-        lambda_expr = [Symbol('lambda'), 
+    # transforms the let to an application and compiles it
+    bindings = slist.cadr
+    body = slist.cddr
+    params = Cons.iterable2list(binding.car for binding in bindings)
+    arguments = Cons.iterable2list(binding.cadr for binding in bindings)
+    lambda_expr = Cons(Symbol('lambda'), Cons(params, body))
+    app = Cons(lambda_expr, arguments)
+    return compile_application(app)
+
 
 @handler('begin')
 def beginexpr(slist):
     return exprs.BeginExpr([compile(subexpr) for subexpr in slist.cdr])
+
+
+def compile_application(app):
+    subexprs = [compile(element) for element in app.pylist]
+    return exprs.ApplicationExpr(subexprs)
 
 
 def compile(sds):
@@ -154,10 +162,10 @@ def compile(sds):
     first = sds.car
     if type(first) is Symbol:
         handler = handlers.get(first)
-        if handler is not None:
+        if handler is None:
+            return compile_application(sds)
+        else:
             return handler(sds)
 
-    # @sds encodes an application expression.
-    subexprs = [compile(element) for element in sds.pylist]
-    return exprs.ApplicationExpr(subexprs)
+    return compile_application(sds)
 
