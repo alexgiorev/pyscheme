@@ -8,11 +8,13 @@ def importit(cls):
     __all__.append(cls.__name__)
     return cls
 
+
 @importit
 class SchemeValue:
     '''Base class for all scheme types. Useful for checking if an
     object is a scheme object'''
     pass
+
 
 @importit
 class Symbol(SchemeValue):
@@ -216,6 +218,31 @@ class Cons(SchemeValue):
             if type(pair) is not Cons:
                 raise ValueError(f'{self} is not a scheme list')
 
+
+    @property
+    def cadr(self):
+        return self.cdr.car
+
+    
+    @property
+    def cddr(self):
+        return self.cdr.cdr
+            
+    def __getitem__(self, index):
+        """If @self is a list and 0 <= @index < length of @self, return the object at
+        @index. If the index is not valid, raises an IndexError. If @self is not a list,
+        raises a ValueError."""
+
+        if index < 0:
+            raise IndexError(f'negative index: {index}')
+
+        i = index
+        for value in self: # May raise ValueError at some point if @self is not a list
+            if i == 0:
+                return value
+            i -= 1
+            
+        raise IndexError(f'index too large: {index}')
             
     def __str__(self):
         """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""
