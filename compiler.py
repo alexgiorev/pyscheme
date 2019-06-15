@@ -128,11 +128,50 @@ def lambdaexpr(slist):
 
 @handler('let')
 def letexpr(slist):
-    # transforms the let to an application and compiles it
-    bindings = slist.cadr
-    body = slist.cddr
-    params = Cons.iterable2list(binding.car for binding in bindings)
-    arguments = Cons.iterable2list(binding.cadr for binding in bindings)
+    # transforms the let to a lambda application and compiles that
+
+    def validate():
+        """Makes sure slist is well formed. If not, a ValueError is raised.
+        Returns a triple of scheme lists (params, body, arguments)."""
+        
+        def raiseit(msg):
+            raise ValueError(f'invalid let expression: {slist}. {msg}')
+    
+        if type(slist.cdr) is not Cons:
+            raiseit(f"Unexpected cdr after 'let: {slist.cdr}")
+    
+        bindings = slist.cadr
+
+        if type(bindings) is not Cons:
+            raiseit(f'bindings must be a list: {bindings}')
+
+        try:
+            bindings = list(bindings)
+        except ValueError: # when bindings is not a list
+            raiseit(f'bindings must be a list: {bindings}')
+        
+        body = slist.cddr
+    
+        if type(body) is not Cons or not body.is_list:
+            raiseit(f'the body must be a list: {body}')
+        
+        params = []
+        arguments = []
+
+        for i, binding in enumerate(bindings):
+            if type(binding) is not Cons:
+                raiseit(f'The binding at position {i} is not a list pair.')
+
+            params.append(binding.car)
+
+            if type(binding.cdr) is not Cons:
+                raiseit(f'The binding at position {i} is not a list pair.')
+
+            arguments.append(binding.cadr)
+
+        return Cons.iterable2list(params), body, Cons.iterable2list(arguments)
+
+    params, body, arguments = validate()
     lambda_expr = Cons(Symbol('lambda'), Cons(params, body))
     app = Cons(lambda_expr, arguments)
     return compile_application(app)
