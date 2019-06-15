@@ -263,6 +263,10 @@ class Cons(SchemeValue):
 
 
 class NilType(SchemeValue):
+    @property
+    def pylist(self):
+        return []
+    
     def __bool__(self):
         return False
 
