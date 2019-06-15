@@ -18,19 +18,21 @@ def handler(symname):
 
 
 @handler('quote')
-def quoteexpr(slist):
-    cadr = slist.cdr.car
-    return exprs.QuoteExpr(cadr)
+def quote_expr(slist):
+    if type(slist.cdr) is not Cons:
+        raise ValueError(f'Ill formed quote: {slist}')
+    
+    return exprs.QuoteExpr(slist.cadr)
 
 
 @handler('set!')
-def assignments(slist):
+def assignment_expr(slist):
     def validate():
         # Returns the variable and sub-expression if @slist is
         # valid. ValueError is raised otherwise.
         
-        def raiseit():
-            raise ValueError(f'{slist} is not a valid assignment expression')
+        def raiseit(msg):
+            raise ValueError(f'Ill formed assignment expression: {slist}')
         
         cdr = slist.cdr
         if type(cdr) is not Cons:
@@ -53,38 +55,38 @@ def assignments(slist):
 
 
 @handler('define')
-def definition(slist):
+def definition_expr(slist):
     def validate():
-        # Returns the variable and sub-expression if @slist is
+        # Returns the variable and sub-xexpression if @slist is
         # valid. ValueError is raised otherwise.
         
         def raiseit():
-            raise ValueError(f'"{slist}" is not a valid definition expression')
+            raise ValueError(f'Ill formed definition expression: {slist}')
         
-        cdr = slist.cdr
-        
-        if type(cdr) is not Cons:
+        if type(slist.cdr) is not Cons:
             raiseit()
             
-        cadr = cdr.car
-        
-        if type(cadr) is Symbol:
+        if type(slist.cadr) is Symbol:
             # a variable definition
-            var = cadr
-            subexpr = cdr.cdr.car
-            return var, subexpr
-        elif type(cadr) is Cons:
-            # a function definition
+            var = slist.cadr
             
-            for x in cadr:
+            if type(slist.cddr) is not Cons:
+                raiseit()
+                
+            subexpr = slist.caddr
+            return var, subexpr
+        elif type(slist.cadr) is Cons: # a function definition
+            if not slist.cadr.is_list:
+                raiseit()
+                
+            for x in slist.cadr:
                 if type(x) is not Symbol:
                     raiseit()
                     
-            var = cadr.car
+            var = slist.cadr.car
             params = cadr.cdr
-            body = cdr.cdr
-            lambda_sym = Symbol('lambda')
-            lambda_slist = Cons(lambda_sym, Cons(params, body))
+            body = slist.cddr
+            lambda_slist = Cons(Symbol('lambda'), Cons(params, body))
             return var, lambda_slist
         else:
             raiseit()
@@ -95,41 +97,57 @@ def definition(slist):
 
 
 @handler('if')
-def ifexpr(slist):
-    predicate = compile(slist.cdr.car)
-    consequent = compile(slist.cdr.cdr.car)
-    cdddr = slist.cdr.cdr.cdr
-    alternative = None if cdddr is stypes.nil else compile(cdddr.car)
+def if_expr(slist):
+    try:
+        l = slist.cdr
+        predicate = l.car; l = l.cdr
+        consequent = l.car; l = l.cdr
+        alternative = None if l is stypes.nil else l.car
+    except AttributeError: # caused by one of the l.cdr
+        raise ValueError(f'Ill formed if expression: {slist}')
+    
+    predicate = compile(predicate)
+    consequent = compile(consequent)
+    alternative = None if alternative is None else compile(alternative)
+    
     return exprs.IfExpr(predicate, consequent, alternative)
 
 
 @handler('lambda')
-def lambdaexpr(slist):
-    def raiseit():
-        raise ValueError(f'{slist} is not a valid lambda expression')
-        
-    params = slist.cdr.car
-    if type(params) is not Cons and params is not stypes.nil:
-        raiseit()
+def lambda_expr(slist):
+    def raiseit(msg):
+        raise ValueError(f'{slist} is not a valid lambda expression: {msg}')
 
-    params = params.pylist
+    if type(slist.cdr) is not Cons:
+        raiseit('expected a list after the lambda')
+    
+    params = slist.cdr.car
+    
+    if type(params) is not Cons and params is not stypes.nil:
+        raiseit('the parameters must be a list')
+        
+    try:
+        params = params.pylist
+    except ValueError: # params is a pair, but it may not be a list
+        raiseit('the parameters must be a list')
 
     for param in params:
         if type(param) is not Symbol:
-            raiseit()
+            raiseit('the elements of the parameter list must be symbols, '
+                    f'but found {param}')
 
     body = slist.cdr.cdr
-    if type(body) is not Cons:
-        raiseit()
+    if not (type(body) is Cons and body.is_list):
+        raiseit(f'the body must be a list')
 
     body = [compile(subexpr) for subexpr in body]
     return exprs.LambdaExpr(params, body)
 
 
 @handler('let')
-def letexpr(slist):
+def let_expr(slist):
     # transforms the let to a lambda application and compiles that
-
+    
     def validate():
         """Makes sure slist is well formed. If not, a ValueError is raised.
         Returns a triple of scheme lists (params, body, arguments)."""
@@ -178,7 +196,10 @@ def letexpr(slist):
 
 
 @handler('begin')
-def beginexpr(slist):
+def begin_expr(slist):
+    if not (type(slist.cdr) is Cons and slist.cdr.is_list):
+        raise ValueError(f'Ill formed begin expression: {slist}')
+    
     return exprs.BeginExpr([compile(subexpr) for subexpr in slist.cdr])
 
 
@@ -188,8 +209,8 @@ def compile_application(app):
 
 
 def compile(sds):
-    '''Transforms the scheme data structure @sds to an Expr object. If
-    not possible, a ValueError is raised'''
+    """Transforms the scheme data structure @sds to an Expr object. If
+    not possible, a ValueError is raised"""
     
     if type(sds) in (Number, String, Boolean):
         return exprs.SelfEvaluatingExpr(sds)
