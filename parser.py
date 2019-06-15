@@ -9,8 +9,8 @@ from fractions import Fraction
 
 def parse_begin(expr_str):
     slist = parse(expr_str)
-    begin = stypes.Symbol('begin')
-    return stypes.Cons(begin, slist)
+    begin = Symbol('begin')
+    return Cons(begin, slist)
 
 
 def parse(expr_str):
@@ -50,9 +50,9 @@ def parse(expr_str):
                 rest = parse_tokens(tokens_iter) # exhausts @tokens_iter         
                 if not rest:
                     raise ValueError(f'no element after a quote')
-                rest[0] = [stypes.Symbol('quote'), rest[0]]
+                rest[0] = [Symbol('quote'), rest[0]]
                 elements.extend(rest)
-            elif isinstance(token, stypes.SchemeValue):
+            elif isinstance(token, SchemeValue):
                 elements.append(token)
             else:
                 raise ValueError(f'Invalid token (or valid token at '
@@ -61,7 +61,7 @@ def parse(expr_str):
         return elements
 
     pytree = parse_tokens(iter(tokenize(expr_str)))
-    return stypes.Cons.pytree2scmtree(pytree)
+    return Cons.pytree2scmtree(pytree)
 
 """
 ================================================================================
@@ -71,8 +71,8 @@ TODO: think about a better way of encapsulating this
 
 ** tokens:
 a token in this context (contrary to it's normal meaning as a string)
-is considered to be an instance of one of {stypes.Number, stypes.Symbol,
-stypes.String, stypes.Boolean} or a parenthesis string
+is considered to be an instance of one of {Number, Symbol,
+String, Boolean} or a parenthesis string
 
 ** extraction functions:
 They all take non-empty strings as arguments.  They extract the token
@@ -125,7 +125,7 @@ def extract_symbol(expr_str):
             return None
         
         rest = expr_str[m.end():]
-        return (stypes.Symbol(astr), rest)
+        return (Symbol(astr), rest)
     else:
         return None
         
@@ -158,7 +158,7 @@ def extract_number(expr_str):
         attempt = try_re(expr_str, RE, numtype)
         if attempt is not None:
             pynum, rest = attempt
-            return (stypes.Number(pynum), rest)
+            return (Number(pynum), rest)
         
     return None
 
@@ -188,7 +188,7 @@ def extract_string(expr_str):
         return None
     else:
         chars = expr_str[1:edqi]
-        return (stypes.String(chars), expr_str[edqi+1:])
+        return (String(chars), expr_str[edqi+1:])
 
 
 @extraction_func

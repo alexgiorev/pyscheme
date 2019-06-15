@@ -8,7 +8,7 @@ from stypes import *
 handlers = {}
 
 def handler(symname):
-    symbol = stypes.Symbol(symname)
+    symbol = Symbol(symname)
     
     def decorator(func):
         handlers[symbol] = func
@@ -33,15 +33,15 @@ def assignments(slist):
             raise ValueError(f'{slist} is not a valid assignment expression')
         
         cdr = slist.cdr
-        if type(cdr) is not stypes.Cons:
+        if type(cdr) is not Cons:
             raiseit()
 
         var = cdr.car
-        if type(var) is not stypes.Symbol:
+        if type(var) is not Symbol:
             raiseit()
 
         cddr = cdr.cdr
-        if type(cddr) is not stypes.Cons:
+        if type(cddr) is not Cons:
             raiseit()
 
         subexpr = cddr.car
@@ -63,28 +63,28 @@ def definition(slist):
         
         cdr = slist.cdr
         
-        if type(cdr) is not stypes.Cons:
+        if type(cdr) is not Cons:
             raiseit()
             
         cadr = cdr.car
         
-        if type(cadr) is stypes.Symbol:
+        if type(cadr) is Symbol:
             # a variable definition
             var = cadr
             subexpr = cdr.cdr.car
             return var, subexpr
-        elif type(cadr) is stypes.Cons:
+        elif type(cadr) is Cons:
             # a function definition
             
             for x in cadr:
-                if type(x) is not stypes.Symbol:
+                if type(x) is not Symbol:
                     raiseit()
                     
             var = cadr.car
             params = cadr.cdr
             body = cdr.cdr
-            lambda_sym = stypes.Symbol('lambda')
-            lambda_slist = stypes.Cons(lambda_sym, stypes.Cons(params, body))
+            lambda_sym = Symbol('lambda')
+            lambda_slist = Cons(lambda_sym, Cons(params, body))
             return var, lambda_slist
         else:
             raiseit()
@@ -109,17 +109,17 @@ def lambdaexpr(slist):
         raise ValueError(f'{slist} is not a valid lambda expression')
         
     params = slist.cdr.car
-    if type(params) is not stypes.Cons:
+    if type(params) is not Cons:
         raiseit()
 
     params = params.pylist
 
     for param in params:
-        if type(param) is not stypes.Symbol:
+        if type(param) is not Symbol:
             raiseit()
 
     body = slist.cdr.cdr
-    if type(body) is not stypes.Cons:
+    if type(body) is not Cons:
         raiseit()
 
     body = [compile(subexpr) for subexpr in body]
@@ -144,15 +144,15 @@ def compile(sds):
     '''Transforms the scheme data structure @sds to an Expr object. If
     not possible, a ValueError is raised'''
     
-    if type(sds) in (stypes.Number, stypes.String, stypes.Boolean):
+    if type(sds) in (Number, String, Boolean):
         return exprs.SelfEvaluatingExpr(sds)
-    elif type(sds) is stypes.Symbol:
+    elif type(sds) is Symbol:
         return exprs.VariableExpr(sds)
 
     # At this point @sds is a scheme list. Compile based on the first element.
 
     first = sds.car
-    if type(first) is stypes.Symbol:
+    if type(first) is Symbol:
         handler = handlers.get(first)
         if handler is not None:
             return handler(sds)

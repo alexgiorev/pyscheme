@@ -1,6 +1,7 @@
 import stypes
 
 from exceptions import *
+from stypes import *
 from environment import Environment
 from frame import Frame
 
@@ -47,9 +48,9 @@ class Caller:
         operator = self.operator
         operands = self.operands
         
-        if type(operator) is stypes.PrimitiveProcedure:
+        if type(operator) is PrimitiveProcedure:
             return operator(inter, *operands)
-        elif type(operator) is stypes.CompoundProcedure:
+        elif type(operator) is CompoundProcedure:
             params, step, env = operator.parts
 
             if len(params) != len(operands):
