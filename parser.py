@@ -224,17 +224,16 @@ def tokenize(expr_str):
     """
     
     tokens = [] # will return this
-    expr_str = expr_str.lstrip()
     while expr_str:
+        expr_str = expr_str.lstrip()
         if expr_str[0] == ';':
             expr_str = extract_comment(expr_str)
         else:
-            for func in extraction_funcs:
-                res = func(expr_str)
-                if res is not None:
-                    token, rest = res
+            for efunc in extraction_funcs:
+                result = efunc(expr_str)
+                if result is not None:
+                    token, expr_str = result
                     tokens.append(token)
-                    expr_str = rest.lstrip()
                     break
             else:
                 # none of the functions in token_funcs was able to
