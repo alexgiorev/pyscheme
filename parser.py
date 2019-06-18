@@ -8,23 +8,25 @@ from fractions import Fraction
 
 
 def parse_begin(expr_str):
+    """Parses @expr_str to a Scheme list representing a begin expression. For
+    example, if @expr_str is "(define a 1) (+ a 2)", this function returns a
+    Scheme list representing the expression (begin (define a 1) (+ a 2))."""
+    
     slist = parse(expr_str)
     begin = Symbol('begin')
     return Cons(begin, slist)
 
 
 def parse(expr_str):
-    """Transforms the string @expr_str to a list of scheme data
-    structures.  Raises a ValueError if parsing @expr_str is not
-    possible.  TODO: document in more detail, raise ValueError with
-    meaningful messages """
+    """Transforms the string @expr_str to a scheme list of scheme data
+    structures.  Raises a ValueError if parsing @expr_str is not possible.
+    TODO: document in more detail, raise ValueError with meaningful messages."""
 
     def remaining_tokens(tokens_iter):
-        """Assumes an open parenthesis was encountered and this
-        returns an iterator of the tokens up to the closing
-        parenthesis. The closing parenthesis is not part of the
-        resulting iterator. Raises ValueError if there is no closing
-        parenthesis"""
+        """Assumes an open parenthesis was encountered and this returns an
+        iterator of the tokens up to the closing parenthesis. The closing
+        parenthesis is not part of the resulting iterator. Raises ValueError if
+        there is no closing parenthesis"""
         
         accum = 1
         tokens = []
@@ -40,7 +42,9 @@ def parse(expr_str):
             # all tokens were exhauseted and no closing parenthesis was found
             raise ValueError(f'no closing parenthesis: {expr_str}')        
 
-    def parse_tokens(tokens_iter):        
+    def parse_tokens(tokens_iter):
+        """Returns a Python list representing the AST determined by @tokens_iter."""
+        
         elements = []
         for token in tokens_iter:
             if token == '(':
@@ -70,18 +74,17 @@ def parse(expr_str):
 TODO: think about a better way of encapsulating this
 
 ** tokens:
-a token in this context (contrary to it's normal meaning as a string)
-is considered to be an instance of one of {Number, Symbol,
-String, Boolean} or a parenthesis string
+a token in this context (contrary to it's normal meaning as a string) is
+considered to be an instance of one of {Number, Symbol, String, Boolean} or one
+of the strings {"(", ")", "'"}
 
 ** extraction functions:
-They all take non-empty strings as arguments.  They extract the token
-from the beginning substring and return the rest of the string
-(i.e. the unused part). For example, extract_number("123abc") will
-return (SchemeNumber(123), "abc"). If a token cannot be extracted,
-None is returned. Be careful when calling extraction functions with
-strings that begin with whitespace! They will return None in that
-case.
+They all take non-empty strings as arguments.  They extract the token from the
+beginning substring and return the rest of the string (i.e. the unused
+part). For example, extract_number("123abc") will return (123, "abc"). 123 here
+stands for a Scheme number, not a Python number. If a token cannot be extracted,
+None is returned. Be careful when calling extraction functions with strings that
+begin with whitespace! They will return None in that case.
 """
 
 extraction_funcs = []
@@ -138,7 +141,7 @@ def extract_number(expr_str):
     THIS FUNCTION MUST BE AFTER extract_symbol !
 
     syntax:
-    <number> := <int>|<frac>
+    <number> := <int>|<frac>|<float>
     <int> := (+|-)?<digit>+
     <float> := (+|-)?<digit>+.<digit>+
     <frac> := (+|-)?<digit>+/<digit>+
@@ -170,12 +173,11 @@ def extract_number(expr_str):
 @extraction_func
 def extract_string(expr_str):
     """
-    syntax of string literals: a sequence of characters enclosed in
-    double quotes, with there being no backlash before the last double
-    quote. The double quotes are part of the literal, but will not be
-    a part of the resulting string object. For example, the literal
-    "abc\"def" denotes the string which has the characters {a, b, c,
-    ", d, e, f}.
+    Syntax of string literals: a sequence of characters enclosed in double
+    quotes, with there being no backlash before the last double quote. The
+    double quotes are part of the literal, but will not be a part of the
+    resulting string object. For example, the literal "abc\"def" denotes the
+    string which has the characters {a, b, c, ", d, e, f}.
     """
     
     def ending_dquote_index():
@@ -213,7 +215,7 @@ def extract_boolean(expr_str):
 
 
 def extract_comment(expr_str):
-    """@expr_str begins with ';'. Return the rest after extracting the comment"""
+    """@expr_str begins with ';'. Return the rest after extracting the comment."""
     comment_end = expr_str.find('\n')
     if comment_end == -1:
         return ''
@@ -223,8 +225,8 @@ def extract_comment(expr_str):
     
 def tokenize(expr_str):
     """
-    Returns a list of tokens.
-    Raises a ValueError if parsing @expr_str to a list of tokens is not possible.
+    Returns a list of tokens. Raises a ValueError if tokenizing @expr_str is not
+    possible.
     """
     
     tokens = [] # will return this
