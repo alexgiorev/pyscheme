@@ -1,6 +1,9 @@
 import unittest
 
+import stypes
+
 from parser import *
+from stypes import *
 from fractions import Fraction as Frac
 
 
@@ -89,5 +92,81 @@ class TestTokenize(unittest.TestCase):
         self.assertEqual(tokenize("'(a b c)"),
                          ["'", '(', Symbol('a'), Symbol('b'), Symbol('c'), ')'])
 
+
+class TestParse(unittest.TestCase):
+    def assertEqual(self, obj1, obj2):
+        super().assertEqual(obj1, Cons.pytree2scmtree(obj2))
+
         
+    def test_empty(self):
+        self.assertEqual(parse(''), [])
+
+
+    def test_single_object(self):
+        self.assertEqual(parse('abc'), [Symbol('abc')])
+
+
+    def test_many_primitive_objects(self):
+        self.assertEqual(parse('1 "string" symbol #t'),
+                         [Number(1), String('string'),
+                          Symbol('symbol'), Boolean(True)])
+
+        
+    def test_single_list(self):
+        self.assertEqual(parse('(+ 1 2)'), [[Symbol('+'), Number(1), Number(2)]])
+
+
+    def test_single_empty_lists(self):
+        self.assertEqual(parse('()'), [[]])
+        self.assertEqual(parse('() () ()'), [[], [], []])
+
+        
+    def test_many_lists(self):
+        expr_str = '(+ 1 2) (/ a b) (even? x)'
+        expected = [[Symbol('+'), Number(1), Number(2)],
+                    [Symbol('/'), Symbol('a'), Symbol('b')],
+                    [Symbol('even?'), Symbol('x')]]
+        self.assertEqual(parse(expr_str), expected)
+
+
+    def test_single_nested_list(self):
+        expr_str = '(+ (* a b) (* c d))'
+        expected = [
+            [Symbol('+'),
+             [Symbol('*'), Symbol('a'), Symbol('b')],
+             [Symbol('*'), Symbol('c'), Symbol('d')]]
+        ]
+        self.assertEqual(parse(expr_str), expected)
+
+
+    def test_quote(self):
+        with_quotes = "(append '(1 2) '(a b))"
+        without_quotes = "(append (quote (1 2)) (quote (a b)))"
+        super().assertEqual(parse(with_quotes), parse(without_quotes))
+
+        with_quotes = "''a"
+        without_quotes = "(quote (quote a))"
+        super().assertEqual(parse(with_quotes), parse(without_quotes))
+
+        self.assertRaises(ValueError, parse, "nothing after quote ' ")
+
+    
+    def test_many_nested_lists(self):
+        expr_str = '(+ (* a b) (* c d)) (set! a-even? (even? a))'
+        expected = [
+            [Symbol('+'),
+             [Symbol('*'), Symbol('a'), Symbol('b')],
+             [Symbol('*'), Symbol('c'), Symbol('d')]],
+
+            [Symbol('set!'), Symbol('a-even?'),
+             [Symbol('even?'), Symbol('a')]]
+        ]
+        self.assertEqual(parse(expr_str), expected)
+
+
+    def test_error_bad_parentheses(self):
+        self.assertRaises(ValueError, parse, "((a b c) (d e)")
+        self.assertRaises(ValueError, parse, "(a b c))")
+
+                                
 unittest.main()
