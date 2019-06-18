@@ -106,6 +106,8 @@ def extract_quote(expr_str):
 @extraction_func
 def extract_symbol(expr_str):
     """
+    THIS FUNCTION MUST BE BEFORE extract_number !
+
     A symbol literal a sequence of characters from {<letters> <digits>
     ! $ % & * / : < = > ? ~ _ ^} that cannot be interpreted as a
     number.  So 123 is not a symbol literal, even though it is a
@@ -133,6 +135,8 @@ def extract_symbol(expr_str):
 @extraction_func
 def extract_number(expr_str):
     """
+    THIS FUNCTION MUST BE AFTER extract_symbol !
+
     syntax:
     <number> := <int>|<frac>
     <int> := (+|-)?<digit>+
