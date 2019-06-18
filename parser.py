@@ -224,8 +224,12 @@ def tokenize(expr_str):
     """
     
     tokens = [] # will return this
-    while expr_str:
+    while True:
         expr_str = expr_str.lstrip()
+        
+        if not expr_str:
+            break
+        
         if expr_str[0] == ';':
             expr_str = extract_comment(expr_str)
         else:
@@ -239,4 +243,5 @@ def tokenize(expr_str):
                 # none of the functions in token_funcs was able to
                 # extract a token from expr_str, so raise a ValueError
                 raise ValueError(f'unable to extract a token from {expr_str}')
+            
     return tokens
