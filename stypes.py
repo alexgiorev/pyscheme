@@ -102,7 +102,7 @@ class String(SchemeValue):
     - self.chars: a python string which represents the characters of the string
     """
 
-    def __init__(self, chars):
+    def __init__(self, astr):
         """Converts the python string @astr to a Scheme string having
         the same letters (except that escapes in @astr are actually
         expanded in the resulting scheme string)"""
