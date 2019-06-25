@@ -21,6 +21,7 @@ class SelfEvaluatingExpr(Expr):
     def __str__(self):
         return str(self.value)
 
+    
 class QuoteExpr(Expr):
     def __init__(self, slist):
         self.slist = slist
@@ -28,7 +29,8 @@ class QuoteExpr(Expr):
 
     def __str__(self):
         return f'(quote {self.slist})'
-        
+
+    
 class VariableExpr(Expr):
     def __init__(self, var):
         self.var = var
@@ -59,6 +61,7 @@ class AssignmentExpr(Expr):
 
     def __str__(self):
         return f'(set! {self.var} {self.subexpr})'
+
     
 class DefinitionExpr(Expr):
     def __init__(self, var, subexpr):
@@ -81,6 +84,7 @@ class DefinitionExpr(Expr):
 
     def __str__(self):
         return f'(define {self.var} {self.subexpr})'
+
     
 class IfExpr(Expr):
     def __init__(self, predicate, consequent, alternative):
@@ -158,6 +162,7 @@ class ApplicationExpr(Expr):
         self.exprs = exprs
         self.main_step = self._create_main_step(exprs)
 
+        
     @staticmethod
     def _create_main_step(exprs):        
         def values_handler(inter):
@@ -173,6 +178,7 @@ class ApplicationExpr(Expr):
 
         return main_step
 
+    
     def __str__(self):
         return f"({' '.join(str(expr) for expr in self.exprs)})"
 
@@ -222,3 +228,50 @@ class AndExpr(Expr):
     
     def __str__(self):
         return f"(and {' '.join(str(expr) for expr in self.exprs)})"
+
+
+class OrExpr(Expr):
+    def __init__(self, exprs):
+        """(exprs) must be a list of Expr instances."""
+        self.exprs = exprs
+        self.main_step = self._create_main_step(exprs)
+
+        
+    @staticmethod
+    def _create_main_step(exprs):
+        if not exprs:
+            return steptools.Identity(stypes.false)
+
+        def main_step(inter):
+            steps = (expr.main_step for expr in exprs)
+            first_step = next(steps)
+            looper = OrExpr._looper(steps)
+            inter.step_stack.append(looper)
+            inter.step_stack.append(first_step)
+            
+        return main_step
+
+
+    @staticmethod
+    def _looper(steps):
+        """(steps) must be an iterator of steps."""
+        def looper(inter):
+            last_value = inter.last_value
+            
+            if last_value is not stypes.false:
+                return last_value
+            
+            try:
+                next_step = next(steps)
+            except StopIteration:
+                return last_value
+
+            step_stack = inter.step_stack
+            step_stack.append(looper)
+            step_stack.append(next_step)
+
+        return looper
+
+    
+    def __str__(self):
+        return f"(or {' '.join(str(expr) for expr in self.exprs)})"

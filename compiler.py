@@ -271,6 +271,26 @@ def compile_and(slist):
     return exprs.AndExpr([compile(sublist) for sublist in cdr])
 
 
+@handler('or')
+def compile_or(slist):
+    def raiseit():
+        raise ValueError(f'Ill formed and expression: {slist}')
+    
+    cdr = slist.cdr
+    
+    if cdr is stypes.nil:
+        return exprs.OrExpr([])
+    
+    if type(cdr) is not Cons:
+        raiseit()
+
+    if not cdr.is_list:
+        raiseit()
+
+    return exprs.OrExpr([compile(sublist) for sublist in cdr])
+    
+
+
 def compile_application(app):
     subexprs = [compile(element) for element in app.pylist]
     return exprs.ApplicationExpr(subexprs)
