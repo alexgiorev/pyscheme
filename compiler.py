@@ -203,6 +203,55 @@ def compile_begin(slist):
     return exprs.BeginExpr([compile(subexpr) for subexpr in slist.cdr])
 
 
+@handler('cond')
+def compile_cond(slist):    
+    def raiseit():
+        raise ValueError(f'Ill formed cond expression: {slist}')
+    
+    def validate_slist():
+        """Returns a list of the cond's clauses if (slist) has a valid
+        format. Otherwise, a ValueError is raised."""            
+        cdr = slist.cdr
+        if type(cdr) is not Cons:
+            raiseit()
+
+        if not cdr.is_list:
+            raiseit()
+            
+        return list(cdr)
+
+    def validate_clause(clause):
+        """Returns a pair (<predicate>, <body>) if (clause) is valid. Otherwise
+        calls (raiseit)."""
+        
+        if type(clause) is not Cons:
+            raiseit()
+
+        if not clause.is_list:
+            raiseit()
+
+        predicate, body = clause.car, clause.cdr
+        body = Cons(Symbol('begin'), body)
+        return predicate, body
+    
+    clauses = list(reversed(validate_slist()))
+
+    predicate, body = validate_clause(clauses[0])
+    if_accum = (compile_begin(body)
+                if predicate is Symbol('else')
+                else exprs.IfExpr(compile(predicate), compile_begin(body)))
+    
+    for clause in clauses[1:]:
+        predicate, body = validate_clause(clause)
+        
+        if predicate is Symbol('else'):
+            raiseit()
+            
+        if_accum = exprs.IfExpr(compile(predicate), compile_begin(body), if_accum)
+        
+    return if_accum
+
+
 def compile_application(app):
     subexprs = [compile(element) for element in app.pylist]
     return exprs.ApplicationExpr(subexprs)
