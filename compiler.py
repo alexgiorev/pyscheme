@@ -18,7 +18,7 @@ def handler(symname):
 
 
 @handler('quote')
-def quote_expr(slist):
+def compile_quote(slist):
     if type(slist.cdr) is not Cons:
         raise ValueError(f'Ill formed quote: {slist}')
     
@@ -26,7 +26,7 @@ def quote_expr(slist):
 
 
 @handler('set!')
-def assignment_expr(slist):
+def compile_assignment(slist):
     def validate():
         # Returns the variable and sub-expression if @slist is
         # valid. ValueError is raised otherwise.
@@ -55,7 +55,7 @@ def assignment_expr(slist):
 
 
 @handler('define')
-def definition_expr(slist):
+def compile_definition(slist):
     def validate():
         # Returns the variable and sub-xexpression if @slist is
         # valid. ValueError is raised otherwise.
@@ -97,7 +97,7 @@ def definition_expr(slist):
 
 
 @handler('if')
-def if_expr(slist):
+def compile_if(slist):
     try:
         l = slist.cdr
         predicate = l.car; l = l.cdr
@@ -114,7 +114,7 @@ def if_expr(slist):
 
 
 @handler('lambda')
-def lambda_expr(slist):
+def compile_lambda(slist):
     def raiseit(msg):
         raise ValueError(f'{slist} is not a valid lambda expression: {msg}')
 
@@ -145,7 +145,7 @@ def lambda_expr(slist):
 
 
 @handler('let')
-def let_expr(slist):
+def compile_let(slist):
     # transforms the let to a lambda application and compiles that
     
     def validate():
@@ -196,7 +196,7 @@ def let_expr(slist):
 
 
 @handler('begin')
-def begin_expr(slist):
+def compile_begin(slist):
     if not (type(slist.cdr) is Cons and slist.cdr.is_list):
         raise ValueError(f'Ill formed begin expression: {slist}')
     
