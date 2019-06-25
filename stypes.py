@@ -286,6 +286,10 @@ class NilType(SchemeValue):
     @property
     def pylist(self):
         return []
+
+    @property
+    def is_list(self):
+        return True
     
     def __bool__(self):
         return False
