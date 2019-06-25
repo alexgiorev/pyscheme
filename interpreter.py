@@ -55,6 +55,15 @@ class Interpreter:
         begin_expr = compiler.compile(begin_slist)
         return self.evaluate(begin_expr)
 
+
+    def ifile_all(self, filename):
+        with open(filename) as f:
+            text = f.read()
+
+        exprs = [compiler.compile(slist) for slist in parser.parse(text)]
+        values = [self.evaluate(expr) for expr in exprs]
+        return values
+
     
     def evaluate(self, expr):
         """Evaluates the Expr @expr in the global environment."""
