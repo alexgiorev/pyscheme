@@ -151,6 +151,7 @@ class BeginExpr(Expr):
         exprs_str = ' '.join(str(expr) for expr in self.exprs)
         return f'(begin {exprs_str})'
 
+    
 class ApplicationExpr(Expr):
     def __init__(self, exprs):
         # @exprs must be a non-empty sequence of expressions
@@ -175,3 +176,49 @@ class ApplicationExpr(Expr):
     def __str__(self):
         return f"({' '.join(str(expr) for expr in self.exprs)})"
 
+
+class AndExpr(Expr):
+    def __init__(self, exprs):
+        """(exprs) must be a list of Expr instances."""
+        self.exprs = exprs
+        self.main_step = self._create_main_step(exprs)
+
+        
+    @staticmethod
+    def _create_main_step(exprs):
+        if not exprs:
+            return steptools.Identity(stypes.true)
+
+        def main_step(inter):
+            steps = (expr.main_step for expr in exprs)
+            first_step = next(steps)
+            looper = AndExpr._looper(steps)
+            inter.step_stack.append(looper)
+            inter.step_stack.append(first_step)
+            
+        return main_step
+
+
+    @staticmethod
+    def _looper(steps):
+        """(steps) must be an iterator of steps."""
+        def looper(inter):
+            last_value = inter.last_value
+            
+            if last_value is stypes.false:
+                return stypes.false
+            
+            try:
+                next_step = next(steps)
+            except StopIteration:
+                return last_value
+
+            step_stack = inter.step_stack
+            step_stack.append(looper)
+            step_stack.append(next_step)
+
+        return looper
+
+    
+    def __str__(self):
+        return f"(and {' '.join(str(expr) for expr in self.exprs)})"

@@ -252,6 +252,25 @@ def compile_cond(slist):
     return if_accum
 
 
+@handler('and')
+def compile_and(slist):
+    def raiseit():
+        raise ValueError(f'Ill formed and expression: {slist}')
+    
+    cdr = slist.cdr
+    
+    if cdr is stypes.nil:
+        return exprs.AndExpr([])
+    
+    if type(cdr) is not Cons:
+        raiseit()
+
+    if not cdr.is_list:
+        raiseit()
+
+    return exprs.AndExpr([compile(sublist) for sublist in cdr])
+
+
 def compile_application(app):
     subexprs = [compile(element) for element in app.pylist]
     return exprs.ApplicationExpr(subexprs)
