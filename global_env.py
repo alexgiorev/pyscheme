@@ -162,6 +162,16 @@ def _(inter, num):
 
 
 ################################################################################
+# boolean functions
+
+@globalfunc('not')
+def _(inter, x):
+    if x is stypes.false:
+        return stypes.true
+    return stypes.false
+
+
+################################################################################
 # pair and list functions
 
 def check_pair(x, funcname):
