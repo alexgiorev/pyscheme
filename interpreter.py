@@ -6,13 +6,31 @@ from frame import Frame
 
 
 class Interpreter:
-    """attributes: self.global_env"""
+    """
+    * attributes
+    ** global_env: the global environment
+    ** frame_stack: the frame stack
+    ** last_value:
+       the value of the last step (may be None if the last step returns no value)
+    ** step_stack:
+       The step stack of the bottom frame of the frame stack. self.step_stack is
+       equivalent to self.frame.step_stack. ValueError is raised if this
+       attribute is fetched when the frame stack is empty.
+    ** frame:
+       The bottom frame on the frame stack. ValueError is raised if this
+       attribute is fetched when the frame stack is empty.
+    ** env
+       The environment of the bottom frame. self.env is equivalent to
+       self.frame.env. A ValueError is raised if this attribute is fetched when
+       the frame stack is empty.
+    """
 
     def __init__(self):
         self.global_env = global_env.make()
         self.frame_stack = []
         self.last_value = None
 
+        
     @property
     def step_stack(self):
         """Returns the step stack of the bottom frame of the frame stack."""
@@ -40,14 +58,18 @@ class Interpreter:
 
     
     def istr(self, expr_str):
-        """Evaluates @expr_str in the global environment."""
+        """Evaluates the expression encoded by @expr_str in the global
+        environment and returns it's value."""
+        
         slist = parser.parse(expr_str).car
         expr = compiler.compile(slist)
         return self.evaluate(expr)
 
     
     def ifile(self, filename):
-        """Interprets the contents of the file at @filename in the global environment."""
+        """Interprets the contents of the file at @filename in the global
+        environment. Returns the value of the last expression in the file."""
+        
         with open(filename) as f:
             text = f.read()
             
@@ -57,6 +79,10 @@ class Interpreter:
 
 
     def ifile_all(self, filename):
+        """Interprets the contents of the file at @filename in the global
+        environment. Returns a list of the values of all top-level
+        expressions."""
+
         with open(filename) as f:
             text = f.read()
 
@@ -66,7 +92,8 @@ class Interpreter:
 
     
     def evaluate(self, expr):
-        """Evaluates the Expr @expr in the global environment."""
+        """Evaluates the Expr @expr in the global environment and returns it's
+        value."""
         
         self.frame_stack = [Frame(expr.main_step, self.global_env)]
         
