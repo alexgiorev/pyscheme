@@ -94,7 +94,7 @@ class Interpreter:
         with open(filename) as f:
             text = f.read()
 
-        self.istr_all(text)
+        return self.istr_all(text)
 
     
     def evaluate(self, expr):
