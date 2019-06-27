@@ -79,13 +79,13 @@ def _(inter, a, b):
 
 @globalfunc('sub1')
 def _(inter, x):
-    check_num(x)
+    check_num(x, 'sub1')
     return x - Number(1)
 
 
 @globalfunc('add1')
 def _(inter, x):
-    check_num(x)
+    check_num(x, 'add1')
     return x + Number(1)
 
 
