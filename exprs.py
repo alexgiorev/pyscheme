@@ -88,7 +88,7 @@ class DefinitionExpr(Expr):
 
     
 class IfExpr(Expr):
-    def __init__(self, predicate, consequent, alternative):
+    def __init__(self, predicate, consequent, alternative=None):
         self.predicate = predicate
         self.consequent = consequent
         self.alternative = alternative
