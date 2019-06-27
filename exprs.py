@@ -3,6 +3,7 @@ import steptools
 
 from frame import Frame
 from exceptions import *
+from stypes import *
 from environment import Environment
 
 class Expr:
@@ -126,13 +127,13 @@ class LambdaExpr(Expr):
         self.params = params
         self.body = body
         self.funcname = None if var is None else String(var.chars)
-        self.main_step = self._create_main_step(params, body)
+        self.main_step = self._create_main_step(params, body, self.funcname)
 
     @staticmethod
     def _create_main_step(params, body, funcname):
         compiled_body = BeginExpr(body).main_step
         return (lambda inter:
-                stypes.CompoundProcedure(params, compiled_body, inter.env, funcname))
+                CompoundProcedure(params, compiled_body, inter.env, funcname))
 
     def __str__(self):
         params_str = f"({' '.join(str(param) for param in self.params)})"

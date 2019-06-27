@@ -95,7 +95,7 @@ def compile_definition(slist):
             params = slist.cadr.cdr
             body = slist.cddr
             lambda_slist = Cons(Symbol('lambda'), Cons(params, body))
-            return var, lambda_slist, var
+            return var, lambda_slist
         else:
             raiseit()
             
