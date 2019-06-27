@@ -8,8 +8,8 @@ from environment import Environment
 class Expr:
     """Base class for all expressions.
     * attributes for instances of subclasses
-    - self.main_step: a callable which accepts a single inter argument. It should be
-      evaluatable an arbitrary number of times."""
+    - self.main_step: a callable which accepts a single interpreter argument. It
+      should be evaluatable an arbitrary number of times."""
     pass
 
 
@@ -120,18 +120,19 @@ class IfExpr(Expr):
 
     
 class LambdaExpr(Expr):
-    def __init__(self, params, body):
-        # params must be a sequence of variables
-        # body must be a non-empty sequence of expressions
+    def __init__(self, params, body, var=None):
+        """(params) must be a sequence of variables. (body) must be a sequence
+        of expressions. (var) must be either None or a Symbol."""
         self.params = params
         self.body = body
+        self.funcname = None if var is None else String(var.chars)
         self.main_step = self._create_main_step(params, body)
 
     @staticmethod
-    def _create_main_step(params, body):
+    def _create_main_step(params, body, funcname):
         compiled_body = BeginExpr(body).main_step
         return (lambda inter:
-                stypes.CompoundProcedure(params, compiled_body, inter.env))
+                stypes.CompoundProcedure(params, compiled_body, inter.env, funcname))
 
     def __str__(self):
         params_str = f"({' '.join(str(param) for param in self.params)})"

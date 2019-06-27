@@ -1,3 +1,11 @@
+"""
+The most important function in this module is compile. It's purpose is to
+transform a scheme data structure (most commonly a list) to an expression
+(i.e. an instance of Expr). Most of the functions in this module specialize in
+compiling lists with predetermined Symbol heads and compile just dispatches to
+these functions based on the first element of the list to compile.
+"""
+
 import exprs
 import stypes
 
@@ -57,8 +65,8 @@ def compile_assignment(slist):
 @handler('define')
 def compile_definition(slist):
     def validate():
-        # Returns the variable and sub-xexpression if @slist is
-        # valid. ValueError is raised otherwise.
+        """Returns a pair (variable, sub-expression data structure) if (slist)
+        is valid. Otherwise a ValueError is raised."""
         
         def raiseit():
             raise ValueError(f'Ill formed definition expression: {slist}')
@@ -87,12 +95,18 @@ def compile_definition(slist):
             params = slist.cadr.cdr
             body = slist.cddr
             lambda_slist = Cons(Symbol('lambda'), Cons(params, body))
-            return var, lambda_slist
+            return var, lambda_slist, var
         else:
             raiseit()
             
     var, subexpr = validate()
-    subexpr = compile(subexpr)
+    # check for 'lambda' explicitly so that you can pass the variable
+    # needed in order for the function to have name metadata
+    if type(subexpr) is Cons and subexpr.car == Symbol('lambda'):
+        subexpr = compile_lambda(subexpr, var)
+    else:
+        subexpr = compile(subexpr)
+        
     return exprs.DefinitionExpr(var, subexpr)
 
 
@@ -114,7 +128,9 @@ def compile_if(slist):
 
 
 @handler('lambda')
-def compile_lambda(slist):
+def compile_lambda(slist, var=None):
+    """(var) must be a Symbol or None."""
+    
     def raiseit(msg):
         raise ValueError(f'{slist} is not a valid lambda expression: {msg}')
 
@@ -141,7 +157,7 @@ def compile_lambda(slist):
         raiseit(f'the body must be a list')
 
     body = [compile(subexpr) for subexpr in body]
-    return exprs.LambdaExpr(params, body)
+    return exprs.LambdaExpr(params, body, var)
 
 
 @handler('let')
@@ -289,7 +305,6 @@ def compile_or(slist):
 
     return exprs.OrExpr([compile(sublist) for sublist in cdr])
     
-
 
 def compile_application(app):
     subexprs = [compile(element) for element in app.pylist]

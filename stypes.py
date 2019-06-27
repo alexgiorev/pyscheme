@@ -312,15 +312,17 @@ unspecified = UnspecifiedType()
 
 @importit
 class CompoundProcedure(SchemeValue):
-    def __init__(self, params, step, env):
+    def __init__(self, params, step, env, name=None):
         """
         @params must be a list of symbols
         @step must be a step
-        @env must be an environment"""
+        @env must be an environment
+        @name must be a String or None"""
         
         self.params = params
         self.step = step
         self.env = env
+        self.name = name
 
     @property
     def parts(self):
