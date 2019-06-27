@@ -65,6 +65,14 @@ class Interpreter:
         expr = compiler.compile(slist)
         return self.evaluate(expr)
 
+
+    def istr_all(self, exprs_str):
+        """Evaluates the sequence of expressions encoded by @exprs_str in the
+        global environment and returns a list of their values."""
+        
+        exprs = (compiler.compile(slist) for slist in parser.parse(exprs_str))
+        return [self.evaluate(expr) for expr in exprs]
+
     
     def ifile(self, filename):
         """Interprets the contents of the file at @filename in the global
@@ -86,9 +94,7 @@ class Interpreter:
         with open(filename) as f:
             text = f.read()
 
-        exprs = [compiler.compile(slist) for slist in parser.parse(text)]
-        values = [self.evaluate(expr) for expr in exprs]
-        return values
+        self.istr_all(text)
 
     
     def evaluate(self, expr):
