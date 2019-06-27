@@ -102,4 +102,25 @@ class TestAll(unittest.TestCase):
                                   Number(0), Number(16)])
 
 
+    def test_fib(self):
+        code = """
+        (define (fib n)
+          (cond ((= n 0) 0)
+                ((= n 1) 1)
+                (else (+ (fib (- n 1))
+                         (fib (- n 2))))))
+        """
+        self.i.istr(code)
+        
+        def real_fib(n):
+            a, b = 0, 1
+            for k in range(n):
+                a, b = b, a + b
+            return a
+        
+        for k in range(10):
+            self.assertEqual(Number(real_fib(k)),
+                             self.i.istr(f'(fib {k})'))
+            
+        
 unittest.main()
