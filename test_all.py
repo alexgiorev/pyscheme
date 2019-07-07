@@ -1,5 +1,6 @@
 import unittest
 import math
+import random
 
 from interpreter import *
 from stypes import *
@@ -121,6 +122,120 @@ class TestAll(unittest.TestCase):
         for k in range(10):
             self.assertEqual(Number(real_fib(k)),
                              self.i.istr(f'(fib {k})'))
-            
+
+
+    def test_count_change(self):
+        code = """
+        (define (count-change amount)
+          (cc amount 5))
+
+        (define (cc amount kinds-of-coins)
+          (cond ((= amount 0) 1)
+                ((or (< amount 0) 
+                     (= kinds-of-coins 0)) 
+                 0)
+                (else 
+                 (+ (cc amount (- kinds-of-coins 1))
+                    (cc (- amount (first-denomination 
+                                   kinds-of-coins))
+                        kinds-of-coins)))))
+
+        (define (first-denomination kinds-of-coins)
+          (cond ((= kinds-of-coins 1) 1)
+                ((= kinds-of-coins 2) 5)
+                ((= kinds-of-coins 3) 10)
+                ((= kinds-of-coins 4) 25)
+                ((= kinds-of-coins 5) 50)))
+        """
+
+        self.i.istr_all(code)
         
+        self.assertEqual(Number(292),
+                         self.i.istr(f'(count-change 100)'))
+
+
+    def test_ex_1_11(self):
+        code = """
+        (define (f-rec n) 
+           (cond ((< n 3) n) 
+                (else (+ (f-rec (- n 1)) 
+                         (* 2 (f-rec (- n 2))) 
+                         (* 3 (f-rec (- n 3)))))))
+
+        (define (f-iter n) 
+           (define (iter a b c count) 
+             (if (= count 0) 
+               a 
+               (iter b c (+ c (* 2 b) (* 3 a)) (- count 1)))) 
+           (iter 0 1 2 n))
+        """
+
+        self.i.istr_all(code)
+        
+        def f(n):
+            if n < 3: return n
+            a, b, c = 0, 1, 2
+            for k in range(n - 2):
+                a, b, c = b, c, c + 2 * b + 3 * a
+            return c
+
+        for k in range(10):
+            correct = Number(f(k))
+            frec, fiter = (self.i.istr(f'(f-rec {k})'),
+                           self.i.istr(f'(f-iter {k})'))
+            self.assertEqual(correct, frec, msg=f'k = {k}')
+            self.assertEqual(correct, fiter, msg=f'k = {k}')
+        
+
+    def test_exercise_1_12(self):
+        def pascal(r, c):
+            factorial = math.factorial
+            return factorial(r) // (factorial(c) * factorial(r - c))
+
+        code = """
+        (define (pascal n k) 
+           (if (or (= n k) (= k 0))
+               1 
+               (+ (pascal (- n 1) (- k 1)) (pascal (- n 1) k))))
+        """
+
+        self.i.istr_all(code)
+        
+        for k in range(10):
+            r = random.randint(1, 10)
+            c = random.randint(1, r)
+            self.assertEqual(Number(pascal(r, c)),
+                             self.i.istr(f'(pascal {r} {c})'),
+                             msg = f'(r c) = ({r} {c})')
+
+
+    def test_expt(self):
+        def doit():
+            for k in range(10):
+                b = random.randint(1, 20)
+                e = random.randint(1, 20)
+                self.assertEqual(Number(b ** e), self.i.istr(f'(expt {b} {e})'))
+
+        
+        self.i.istr_all("""
+        (define (expt b n)
+          (if (= n 0) 
+              1 
+              (* b (expt b (- n 1)))))""")
+
+        doit()
+
+        self.i.istr_all("""
+        (define (expt b n) 
+          (expt-iter b n 1))
+
+        (define (expt-iter b counter product)
+          (if (= counter 0)
+              product
+              (expt-iter b
+                         (- counter 1)
+                         (* b product))))""")
+
+        doit()
+            
 unittest.main()
