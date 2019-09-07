@@ -36,14 +36,14 @@ class Symbol(SchemeValue):
         
         if symbol is None:
             newsymbol = object.__new__(Symbol)
-            newsymbol.chars = astr
+            newsymbol.name = astr
             Symbol._interned_symbols[astr] = newsymbol
             return newsymbol
 
         return symbol
         
     def __repr__(self):
-        return self.chars
+        return self.name
 
 
 @importit    
@@ -301,6 +301,7 @@ class NilType(SchemeValue):
         return iter([])
     
 nil = NilType()
+__all__.append('nil')
 
 
 class UnspecifiedType(SchemeValue):
