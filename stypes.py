@@ -218,8 +218,8 @@ class Cons(SchemeValue):
     
     def __iter__(self):
         """@self must encode a scheme list for this function to work
-        properly. Otherwise, the first time you enter a cdr which is
-        not a Cons, a ValueError will be raised."""
+        properly. Otherwise, the first time you enter a cdr which is not a Cons
+        or nil, a ValueError will be raised."""
 
         pair = self
         while True:
@@ -280,6 +280,10 @@ class Cons(SchemeValue):
         return (type(other) is type(self)
                 and self.car == other.car
                 and self.cdr == other.cdr)
+
+    
+    def __len__(self):
+        return sum(1 for i in self)
 
 
 class NilType(SchemeValue):
