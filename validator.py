@@ -51,7 +51,7 @@ def list_vldtr(ls, obj):
                 return False
         return True            
     
-    objects, schemas = iter(obj), iter(ls)
+    objects, schemas = iter(obj), children(ls)
     for child in schemas:
         if child in ('rest', 'rest+'):
             try: restscm = next(schemas)
@@ -78,36 +78,37 @@ def children(ls):
 def any_vldtr(scm, obj):
     return True
 
-import parser
+if __name__ == '__main__':
+    import parser
 
-def parse(astr):
-    return parser.parse(astr).car
+    def parse(astr):
+        return parser.parse(astr).car
 
-quote = [('symbol', 'quote'), 'any']
-assignment = [('symbol', 'set!'), 'symbol', 'any']
-ifexpr =  [('symbol', 'if'), 'any', 'optional', 'any']
-lambdaexpr = [('symbol', 'lambda'), ['rest', 'symbol'], 'rest+', 'any']
-letexpr = [('symbol', 'let'), ['rest', ['symbol', 'any']], 'rest+', 'any']
-begin = [('symbol', 'begin'), 'rest+', 'any']
-cond = [('symbol', 'cond'), 'rest+', ['any', 'rest+', 'any']]
+    
+    quote = [('symbol', 'quote'), 'any']
+    assignment = [('symbol', 'set!'), 'symbol', 'any']
+    ifexpr =  [('symbol', 'if'), 'any', 'optional', 'any']
+    lambdaexpr = [('symbol', 'lambda'), ['rest', 'symbol'], 'rest+', 'any']
+    letexpr = [('symbol', 'let'), ['rest', ['symbol', 'any']], 'rest+', 'any']
+    begin = [('symbol', 'begin'), 'rest+', 'any']
+    cond = [('symbol', 'cond'), 'rest+', ['any', 'rest+', 'any']]
 
-assert validate(quote, parse('(quote me)'))
-assert not validate(quote, parse('(quote)'))
-assert not validate(quote, parse('(quote me and you)'))
-assert validate(assignment, parse('(set! a (+ b 10))'))
-assert not validate(assignment, parse('(set! 10 15)'))
-assert not validate(assignment, parse('(set a 5)'))
-assert not validate(assignment, parse('(set! a)'))
-assert validate(lambdaexpr, parse('(lambda (a b) (define c (+ a b)) (+ a b c))'))
-assert validate(lambdaexpr, parse('(lambda () do-something)'))
-assert not validate(lambdaexpr, parse('(lambda (a b c))'))
-assert validate(letexpr, parse('(let ((a 1) (b 2) (c 3)) (+ a b c 1))'))
-assert validate(letexpr, parse('(let () (+ 3 4))'))
-assert validate(letexpr, parse('(let ((a 1)) (+ a b))'))
-assert not validate(letexpr, parse('(let ((3 4) (5 6)) (+ 3 5))'))
-assert not validate(letexpr, parse('(let ((a 1) (b 2)))'))
-assert validate(begin, parse('(begin (define a 1) (define b 2) (+ a b))'))
-assert not validate(begin, parse('begin'))
-assert not validate(begin, parse('(begin)'))
-assert validate(cond, '(cond ((even? a) expr1 expr2) (else else-expr))')
-
+    assert validate(quote, parse('(quote me)'))
+    assert not validate(quote, parse('(quote)'))
+    assert not validate(quote, parse('(quote me and you)'))
+    assert validate(assignment, parse('(set! a (+ b 10))'))
+    assert not validate(assignment, parse('(set! 10 15)'))
+    assert not validate(assignment, parse('(set a 5)'))
+    assert not validate(assignment, parse('(set! a)'))
+    assert validate(lambdaexpr, parse('(lambda (a b) (define c (+ a b)) (+ a b c))'))
+    assert validate(lambdaexpr, parse('(lambda () do-something)'))
+    assert not validate(lambdaexpr, parse('(lambda (a b c))'))
+    assert validate(letexpr, parse('(let ((a 1) (b 2) (c 3)) (+ a b c 1))'))
+    assert validate(letexpr, parse('(let () (+ 3 4))'))
+    assert validate(letexpr, parse('(let ((a 1)) (+ a b))'))
+    assert not validate(letexpr, parse('(let ((3 4) (5 6)) (+ 3 5))'))
+    assert not validate(letexpr, parse('(let ((a 1) (b 2)))'))
+    assert validate(begin, parse('(begin (define a 1) (define b 2) (+ a b))'))
+    assert not validate(begin, parse('begin'))
+    assert not validate(begin, parse('(begin)'))
+    assert validate(cond, parse('(cond ((even? a) expr1 expr2) (else else-expr))'))
