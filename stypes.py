@@ -265,6 +265,17 @@ class Cons(SchemeValue):
             
         raise IndexError(f'index too large: {index}')
 
+
+    def extract(self, *indices):
+        return tuple(self[i] for i in indices)
+
+
+    def nthcdr(self, n):
+        result = self
+        for k in range(n):
+            result = result.cdr
+        return result
+
     
     def __str__(self):
         """Invariant: str(cons)[0] == '(' and str(cons)[-1] == ')'"""
@@ -305,6 +316,7 @@ class NilType(SchemeValue):
         return iter([])
     
 nil = NilType()
+nil.car = nil.cdr = nil
 __all__.append('nil')
 
 
