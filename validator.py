@@ -10,7 +10,7 @@ def validator(stype):
         return func
     return decorator
 
-def validate(scm, obj):
+def isvalid(scm, obj):
     stype = scmtype(scm)
     return validators[stype](scm, obj)
 
@@ -47,7 +47,7 @@ def list_vldtr(ls, obj):
         if isempty:
             return not atleast_one
         for obj in objs:
-            if not validate(restscm, obj):
+            if not isvalid(restscm, obj):
                 return False
         return True            
     
@@ -62,7 +62,7 @@ def list_vldtr(ls, obj):
             restplus(); break
         else:
             nxt = next(objects, None)
-            if nxt is None or not validate(child, nxt):
+            if nxt is None or not isvalid(child, nxt):
                 return False
     return next(objects, None) is None
                 
@@ -83,7 +83,6 @@ if __name__ == '__main__':
 
     def parse(astr):
         return parser.parse(astr).car
-
     
     quote = [('symbol', 'quote'), 'any']
     assignment = [('symbol', 'set!'), 'symbol', 'any']
@@ -93,22 +92,22 @@ if __name__ == '__main__':
     begin = [('symbol', 'begin'), 'rest+', 'any']
     cond = [('symbol', 'cond'), 'rest+', ['any', 'rest+', 'any']]
 
-    assert validate(quote, parse('(quote me)'))
-    assert not validate(quote, parse('(quote)'))
-    assert not validate(quote, parse('(quote me and you)'))
-    assert validate(assignment, parse('(set! a (+ b 10))'))
-    assert not validate(assignment, parse('(set! 10 15)'))
-    assert not validate(assignment, parse('(set a 5)'))
-    assert not validate(assignment, parse('(set! a)'))
-    assert validate(lambdaexpr, parse('(lambda (a b) (define c (+ a b)) (+ a b c))'))
-    assert validate(lambdaexpr, parse('(lambda () do-something)'))
-    assert not validate(lambdaexpr, parse('(lambda (a b c))'))
-    assert validate(letexpr, parse('(let ((a 1) (b 2) (c 3)) (+ a b c 1))'))
-    assert validate(letexpr, parse('(let () (+ 3 4))'))
-    assert validate(letexpr, parse('(let ((a 1)) (+ a b))'))
-    assert not validate(letexpr, parse('(let ((3 4) (5 6)) (+ 3 5))'))
-    assert not validate(letexpr, parse('(let ((a 1) (b 2)))'))
-    assert validate(begin, parse('(begin (define a 1) (define b 2) (+ a b))'))
-    assert not validate(begin, parse('begin'))
-    assert not validate(begin, parse('(begin)'))
-    assert validate(cond, parse('(cond ((even? a) expr1 expr2) (else else-expr))'))
+    assert isvalid(quote, parse('(quote me)'))
+    assert not isvalid(quote, parse('(quote)'))
+    assert not isvalid(quote, parse('(quote me and you)'))
+    assert isvalid(assignment, parse('(set! a (+ b 10))'))
+    assert not isvalid(assignment, parse('(set! 10 15)'))
+    assert not isvalid(assignment, parse('(set a 5)'))
+    assert not isvalid(assignment, parse('(set! a)'))
+    assert isvalid(lambdaexpr, parse('(lambda (a b) (define c (+ a b)) (+ a b c))'))
+    assert isvalid(lambdaexpr, parse('(lambda () do-something)'))
+    assert not isvalid(lambdaexpr, parse('(lambda (a b c))'))
+    assert isvalid(letexpr, parse('(let ((a 1) (b 2) (c 3)) (+ a b c 1))'))
+    assert isvalid(letexpr, parse('(let () (+ 3 4))'))
+    assert isvalid(letexpr, parse('(let ((a 1)) (+ a b))'))
+    assert not isvalid(letexpr, parse('(let ((3 4) (5 6)) (+ 3 5))'))
+    assert not isvalid(letexpr, parse('(let ((a 1) (b 2)))'))
+    assert isvalid(begin, parse('(begin (define a 1) (define b 2) (+ a b))'))
+    assert not isvalid(begin, parse('begin'))
+    assert not isvalid(begin, parse('(begin)'))
+    assert isvalid(cond, parse('(cond ((even? a) expr1 expr2) (else else-expr))'))
