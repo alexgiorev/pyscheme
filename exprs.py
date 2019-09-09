@@ -126,7 +126,7 @@ class LambdaExpr(Expr):
         of expressions. (var) must be either None or a Symbol."""
         self.params = params
         self.body = body
-        self.funcname = None if var is None else String(var.chars)
+        self.funcname = None if var is None else String(var.name)
         self.main_step = self._create_main_step(params, body, self.funcname)
 
     @staticmethod
@@ -160,8 +160,8 @@ class BeginExpr(Expr):
     
 class ApplicationExpr(Expr):
     def __init__(self, exprs):
-        # @exprs must be a non-empty sequence of expressions
-        self.exprs = exprs
+        """(exprs) must be a non-empty iterable of Exprs."""
+        self.exprs = list(exprs)
         self.main_step = self._create_main_step(exprs)
 
         
@@ -187,9 +187,9 @@ class ApplicationExpr(Expr):
 
 class AndExpr(Expr):
     def __init__(self, exprs):
-        """(exprs) must be a list of Expr instances."""
-        self.exprs = exprs
-        self.main_step = self._create_main_step(exprs)
+        """(exprs) must be an iterable of Expr instances."""
+        self.exprs = list(exprs)        
+        self.main_step = self._create_main_step(self.exprs)
 
         
     @staticmethod
@@ -234,9 +234,9 @@ class AndExpr(Expr):
 
 class OrExpr(Expr):
     def __init__(self, exprs):
-        """(exprs) must be a list of Expr instances."""
-        self.exprs = exprs
-        self.main_step = self._create_main_step(exprs)
+        """(exprs) must be an iterable of Expr instances."""
+        self.exprs = list(exprs)
+        self.main_step = self._create_main_step(self.exprs)
 
         
     @staticmethod

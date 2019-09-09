@@ -172,16 +172,13 @@ class Cons(SchemeValue):
 
         
     @staticmethod
-    def iterable2list(iterable):
-        """Returns a Scheme list with the same values as the python list @pylist"""
+    def from_iter(iterable):
         result = nil
-
         try:
             rev = reversed(iterable)
         except TypeError:
             # @iterable is not reversible
-            rev = reversed(list(iterable))
-        
+            rev = reversed(list(iterable))        
         for value in rev:
             result = Cons(value, result)
         return result
@@ -191,7 +188,7 @@ class Cons(SchemeValue):
     def pytree2scmtree(pytree):
         """@pytree must be a python list or a scheme value."""
         if type(pytree) is list:
-            return Cons.iterable2list(map(Cons.pytree2scmtree, pytree))
+            return Cons.from_iter(map(Cons.pytree2scmtree, pytree))
         else:
             # pytree is a list
             return pytree

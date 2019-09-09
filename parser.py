@@ -224,10 +224,8 @@ def extract_comment(expr_str):
 
     
 def tokenize(expr_str):
-    """
-    Returns a list of tokens. Raises a ValueError if tokenizing @expr_str is not
-    possible.
-    """
+    """Returns a list of tokens. Raises a ValueError if tokenizing @expr_str is
+    not possible."""
     
     tokens = [] # will return this
     while True:
@@ -246,8 +244,8 @@ def tokenize(expr_str):
                     tokens.append(token)
                     break
             else:
-                # none of the functions in token_funcs was able to
+                # none of the functions in extraction_funcs was able to
                 # extract a token from expr_str, so raise a ValueError
-                raise ValueError(f'unable to extract a token from {expr_str}')
+                raise ValueError(f'Unable to extract a token from {expr_str}')
             
     return tokens

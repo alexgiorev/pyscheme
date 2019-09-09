@@ -76,7 +76,7 @@ def children(ls):
 
 @validator('any')
 def any_vldtr(scm, obj):
-    return True
+    return isinstance(obj, SchemeValue)
 
 if __name__ == '__main__':
     import parser

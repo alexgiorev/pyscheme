@@ -110,5 +110,3 @@ class Interpreter:
             if not self.step_stack:
                 self.frame_stack.pop()
         return self.last_value
-
-i = Interpreter()

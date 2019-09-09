@@ -214,7 +214,7 @@ def _(inter, pair):
 
 @globalfunc('list')
 def _(inter, *args):
-    return Cons.iterable2list(args)
+    return Cons.from_iter(args)
 
 
 @globalfunc('empty?')
@@ -226,7 +226,7 @@ def _(inter, arg):
 def _(inter, pred, lst):
     def values_handler(inter):
         bool_results = inter.last_value
-        return Cons.iterable2list((value for value, include_it in zip(lst, bool_results)
+        return Cons.from_iter((value for value, include_it in zip(lst, bool_results)
                                    if include_it))
     
     sequencer = steptools.Sequencer(steptools.Caller(pred, [arg]) for arg in lst)
@@ -237,7 +237,7 @@ def _(inter, pred, lst):
 @globalfunc('map')
 def _(inter, func, *lists):
     def values_handler(inter):
-        return Cons.iterable2list(inter.last_value)
+        return Cons.from_iter(inter.last_value)
 
     sequencer = steptools.Sequencer(steptools.Caller(func, args) for args in zip(*lists))
     inter.step_stack.append(values_handler)
